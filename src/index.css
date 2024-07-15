@@ -1,0 +1,112 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100%;
+  display: flex;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  /* font-family: 'Roboto', sans-serif; */
+  overflow-y: hidden;
+}
+
+.spectrograms {
+  position: relative;
+  flex: 1 1 0;
+}
+
+.spectrograms .spectrogram {
+  height: 50%;
+  position: relative;
+}
+
+.spectrograms .spectrogram canvas {
+  width: 100%;
+  height: 100%;
+  background-color: black;
+}
+
+.spectrograms .separator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 2px;
+}
+
+.spectrograms .spectrogram:first-child::after {
+  content: "";
+  display: block;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+
+.spectrograms .separator,
+.spectrograms .spectrogram:first-child::after {
+  background: rgba(119, 119, 119, 0.25);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.spectrograms .spectrogram .label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 6px 12px;
+  color: #ffffff;
+  background: rgba(53, 53, 53, 0.75);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-bottom-right-radius: 3px;
+  box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.controls {
+  box-sizing: border-box;
+  background-color: #101010;
+  padding: 16px;
+  width: 300px;
+  flex: 0 0 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+@media (max-width: 800px) {
+  .spectrograms .separator {
+    display: none;
+  }
+
+  .controls {
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+    width: auto;
+    padding: 0;
+  }
+}
