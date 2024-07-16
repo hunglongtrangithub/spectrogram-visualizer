@@ -10,7 +10,9 @@ export interface GlslVariable {
 }
 
 /** Map of original unminified names to their minified details */
-export interface GlslVariableMap { [original: string]: GlslVariable }
+export interface GlslVariableMap {
+  [original: string]: GlslVariable;
+}
 
 /** A minified shader output by webpack-glsl-minify */
 export interface GlslShader {
@@ -34,119 +36,272 @@ export interface GlslFile {
 
 const glslTypes = [
   // Basic types
-  'bool', 'double', 'float', 'int', 'uint',
+  "bool",
+  "double",
+  "float",
+  "int",
+  "uint",
 
   // Vector types
-  'vec2', 'vec3', 'vec4',
-  'bvec2', 'bvec3', 'bvec4',
-  'dvec2', 'dvec3', 'dvec4',
-  'ivec2', 'ivec3', 'ivec4',
-  'uvec2', 'uvec3', 'uvec4',
+  "vec2",
+  "vec3",
+  "vec4",
+  "bvec2",
+  "bvec3",
+  "bvec4",
+  "dvec2",
+  "dvec3",
+  "dvec4",
+  "ivec2",
+  "ivec3",
+  "ivec4",
+  "uvec2",
+  "uvec3",
+  "uvec4",
 
   // Matrix types
-  'mat2', 'mat2x2', 'mat2x3', 'mat2x4',
-  'mat3', 'mat3x2', 'mat3x3', 'mat3x4',
-  'mat4', 'mat4x2', 'mat4x3', 'mat4x4',
+  "mat2",
+  "mat2x2",
+  "mat2x3",
+  "mat2x4",
+  "mat3",
+  "mat3x2",
+  "mat3x3",
+  "mat3x4",
+  "mat4",
+  "mat4x2",
+  "mat4x3",
+  "mat4x4",
 
   // Sampler types
-  'sampler1D', 'sampler2D', 'sampler3D', 'samplerCube', 'sampler2DRect',
-  'isampler1D', 'isampler2D', 'isampler3D', 'isamplerCube', 'isampler2DRect',
-  'usampler1D', 'usampler2D', 'usampler3D', 'usamplerCube', 'usampler2DRect',
+  "sampler1D",
+  "sampler2D",
+  "sampler3D",
+  "samplerCube",
+  "sampler2DRect",
+  "isampler1D",
+  "isampler2D",
+  "isampler3D",
+  "isamplerCube",
+  "isampler2DRect",
+  "usampler1D",
+  "usampler2D",
+  "usampler3D",
+  "usamplerCube",
+  "usampler2DRect",
 
-  'sampler1DArray', 'sampler2DArray', 'samplerCubeArray',
-  'isampler1DArray', 'isampler2DArray', 'isamplerCubeArray',
-  'usampler1DArray', 'usampler2DArray', 'usamplerCubeArray',
+  "sampler1DArray",
+  "sampler2DArray",
+  "samplerCubeArray",
+  "isampler1DArray",
+  "isampler2DArray",
+  "isamplerCubeArray",
+  "usampler1DArray",
+  "usampler2DArray",
+  "usamplerCubeArray",
 
-  'samplerBuffer', 'sampler2DMS', 'sampler2DMSArray',
-  'isamplerBuffer', 'isampler2DMS', 'isampler2DMSArray',
-  'usamplerBuffer', 'usampler2DMS', 'usampler2DMSArray',
+  "samplerBuffer",
+  "sampler2DMS",
+  "sampler2DMSArray",
+  "isamplerBuffer",
+  "isampler2DMS",
+  "isampler2DMSArray",
+  "usamplerBuffer",
+  "usampler2DMS",
+  "usampler2DMSArray",
 
-  'sampler1DShadow', 'sampler2DShadow', 'samplerCubeShadow', 'sampler2DRectShadow', 'sampler1DArrayShadow',
-  'sampler2DArrayShadow', 'samplerCubeArrayShadow',
+  "sampler1DShadow",
+  "sampler2DShadow",
+  "samplerCubeShadow",
+  "sampler2DRectShadow",
+  "sampler1DArrayShadow",
+  "sampler2DArrayShadow",
+  "samplerCubeArrayShadow",
 
-  'void'
+  "void",
 ];
 
 const glslTypeQualifiers = [
   // Other type-related keywords
-  'attribute', 'const', 'invariant', 'struct', 'uniform', 'varying',
+  "attribute",
+  "const",
+  "invariant",
+  "struct",
+  "uniform",
+  "varying",
 
   // Precision keywords
-  'highp', 'lowp', 'mediump', 'precision',
+  "highp",
+  "lowp",
+  "mediump",
+  "precision",
 
   // Input/output keywords
-  'in', 'inout', 'out',
+  "in",
+  "inout",
+  "out",
 
   // Interpolation qualifiers
-  'flat', 'noperspective', 'smooth', 'centroid', 'sample',
+  "flat",
+  "noperspective",
+  "smooth",
+  "centroid",
+  "sample",
 
   // Memory qualifiers
-  'coherent', 'volatile', 'restrict', 'readonly', 'writeonly',
+  "coherent",
+  "volatile",
+  "restrict",
+  "readonly",
+  "writeonly",
 
   // Layout qualifiers
-  'layout', 'location'
+  "layout",
+  "location",
 ];
 
 const glslConstantValues = [
-  'false', 'true',
+  "false",
+  "true",
 
   // Built-in macros
-  '__FILE__', '__LINE__', '__VERSION__', 'GL_ES', 'GL_FRAGMENT_PRECISION_HIGH'
+  "__FILE__",
+  "__LINE__",
+  "__VERSION__",
+  "GL_ES",
+  "GL_FRAGMENT_PRECISION_HIGH",
 ];
 
 const glslControlKeywords = [
   // Control keywords
-  'break', 'continue', 'do', 'else', 'for', 'if', 'main', 'return', 'while',
+  "break",
+  "continue",
+  "do",
+  "else",
+  "for",
+  "if",
+  "main",
+  "return",
+  "while",
 
-  'discard'
+  "discard",
 ];
 
 const glslBuiltinFunctions = [
   // Trig functions
-  'acos', 'acosh', 'asin', 'asinh', 'atan', 'atanh', 'cos', 'cosh', 'degrees', 'radians', 'sin', 'sinh', 'tan', 'tanh',
+  "acos",
+  "acosh",
+  "asin",
+  "asinh",
+  "atan",
+  "atanh",
+  "cos",
+  "cosh",
+  "degrees",
+  "radians",
+  "sin",
+  "sinh",
+  "tan",
+  "tanh",
 
   // Exponents and logarithms
-  'exp', 'exp2', 'inversesqrt', 'log', 'log2', 'pow', 'sqrt',
+  "exp",
+  "exp2",
+  "inversesqrt",
+  "log",
+  "log2",
+  "pow",
+  "sqrt",
 
   // Clamping and modulus-related funcions
-  'abs', 'ceil', 'clamp', 'floor', 'fract', 'max', 'min', 'mod', 'modf', 'round', 'roundEven', 'sign', 'trunc',
+  "abs",
+  "ceil",
+  "clamp",
+  "floor",
+  "fract",
+  "max",
+  "min",
+  "mod",
+  "modf",
+  "round",
+  "roundEven",
+  "sign",
+  "trunc",
 
   // Floating point functions
-  'isinf', 'isnan',
+  "isinf",
+  "isnan",
 
   // Boolean functions
-  'all', 'any', 'equal','greaterThan', 'greaterThanEqual', 'lessThan', 'lessThanEqual', 'not', 'notEqual',
+  "all",
+  "any",
+  "equal",
+  "greaterThan",
+  "greaterThanEqual",
+  "lessThan",
+  "lessThanEqual",
+  "not",
+  "notEqual",
 
   // Vector functions
-  'cross', 'distance', 'dot', 'faceforward', 'length', 'outerProduct', 'normalize', 'reflect', 'refract',
+  "cross",
+  "distance",
+  "dot",
+  "faceforward",
+  "length",
+  "outerProduct",
+  "normalize",
+  "reflect",
+  "refract",
 
   // Matrix functions
-  'determinant', 'inverse', 'matrixCompMult',
+  "determinant",
+  "inverse",
+  "matrixCompMult",
 
   // Interpolation functions
-  'mix', 'step', 'smoothstep',
+  "mix",
+  "step",
+  "smoothstep",
 
   // Texture functions
-  'texture2D', 'texture2DProj', 'textureCube', 'textureSize',
+  "texture2D",
+  "texture2DProj",
+  "textureCube",
+  "textureSize",
 
   // Noise functions
-  'noise1', 'noise2', 'noise3', 'noise4',
+  "noise1",
+  "noise2",
+  "noise3",
+  "noise4",
 
   // Derivative functions
-  'dFdx', 'dFdxCoarse', 'dFdxFine',
-  'dFdy', 'dFdyCoarse', 'dFdyFine',
-  'fwidth', 'fwidthCoarse', 'fwidthFine'
+  "dFdx",
+  "dFdxCoarse",
+  "dFdxFine",
+  "dFdy",
+  "dFdyCoarse",
+  "dFdyFine",
+  "fwidth",
+  "fwidthCoarse",
+  "fwidthFine",
 ];
 
 /** List of GLSL reserved keywords to avoid mangling. We automatically include any gl_ variables. */
-const glslReservedKeywords = [].concat(glslTypes, glslTypeQualifiers, glslConstantValues, glslControlKeywords,
-  glslBuiltinFunctions);
+const glslReservedKeywords = [].concat(
+  glslTypes,
+  glslTypeQualifiers,
+  glslConstantValues,
+  glslControlKeywords,
+  glslBuiltinFunctions,
+);
 
 // Function to test whether a given string is a swizzle identifier
 const isSwizzle = (token: string) =>
-  token.match(/^[rgba]{1,4}$/) !== null
-  || token.match(/^[xyzw]{1,4}$/) !== null
-  || token.match(/^[stpq]{1,4}$/) !== null;
+  token.match(/^[rgba]{1,4}$/) !== null ||
+  token.match(/^[xyzw]{1,4}$/) !== null ||
+  token.match(/^[stpq]{1,4}$/) !== null;
 
 /**
  * Helper class to minify tokens and track reserved ones
@@ -170,7 +325,10 @@ export class TokenMap {
   public reserveKeywords(keywords: string[]): void {
     for (const keyword of keywords) {
       if (!this.tokens[keyword]) {
-        this.tokens[keyword] = { variableType: undefined, variableName: keyword };
+        this.tokens[keyword] = {
+          variableType: undefined,
+          variableName: keyword,
+        };
       }
     }
   }
@@ -187,12 +345,12 @@ export class TokenMap {
    */
   public static getMinifiedName(tokenCount: number): string {
     const num = tokenCount % 52;
-    const offset = (num < 26) ? (num + 65) : (num + 71); // 65 = 'A'; 71 = ('a' - 26)
+    const offset = num < 26 ? num + 65 : num + 71; // 65 = 'A'; 71 = ('a' - 26)
     const c = String.fromCharCode(offset);
 
     // For tokens over 52, recursively add characters
     const recurse = Math.floor(tokenCount / 52);
-    return (recurse === 0) ? c : (this.getMinifiedName(recurse - 1) + c);
+    return recurse === 0 ? c : this.getMinifiedName(recurse - 1) + c;
   }
 
   /**
@@ -216,14 +374,18 @@ export class TokenMap {
     // Mangle the name. Special-case any tokens starting with "gl_". They should never be minified. Likewise, never
     // mangle substitution values, which start and end with "$".
     let min = name;
-    if (!this.options.preserveAll && !name.startsWith('gl_') && name.indexOf('$') === -1) {
+    if (
+      !this.options.preserveAll &&
+      !name.startsWith("gl_") &&
+      name.indexOf("$") === -1
+    ) {
       min = TokenMap.getMinifiedName(this.minifiedTokenCount++);
     }
 
     // Allocate a new value
     this.tokens[name] = {
       variableName: min,
-      variableType: uniformType
+      variableType: uniformType,
     };
 
     return min;
@@ -308,16 +470,22 @@ export enum TokenType {
   ttPreprocessor,
 
   /** Special value used in the parser when there is no token */
-  ttNone
+  ttNone,
 }
 
 /** Implementation of NodeJS's readFile() API. */
-export type ReadFileImpl = (filename: string, directory?: string) => Promise<GlslFile>;
+export type ReadFileImpl = (
+  filename: string,
+  directory?: string,
+) => Promise<GlslFile>;
 
 /** Stub implementation of NodeJS's readFile() API to work in browsers and non-NodeJS environments */
-function nullReadFile(_filename: string, _directory?: string): Promise<GlslFile> {
+function nullReadFile(
+  _filename: string,
+  _directory?: string,
+): Promise<GlslFile> {
   return new Promise<GlslFile>((_resolve, reject) => {
-    reject(new Error('Not Supported'));
+    reject(new Error("Not Supported"));
   });
 }
 
@@ -370,11 +538,10 @@ export interface GlslMinifyOptions {
  * 'sourceOnly': Outputs a GLSL file without the JavaScript wrapper. Automatically disables mangling. Only supported
  *    in the CLI app, not the Webpack loader.
  */
-export type GlslOutputFormat = 'object' | 'source' | 'sourceOnly';
+export type GlslOutputFormat = "object" | "source" | "sourceOnly";
 
 /** GLSL shader minifier */
 export class GlslMinify {
-
   /** List of tokens minified by the parser */
   private tokens: TokenMap;
 
@@ -388,11 +555,15 @@ export class GlslMinify {
    *    package: nodeDirname() for NodeJS and Webpack and nullDirname() for browsers and other environments that don't
    *    support reading files from the local disk.
    */
-  public constructor(options?: GlslMinifyOptions, readFile = nullReadFile, dirname = nullDirname) {
+  public constructor(
+    options?: GlslMinifyOptions,
+    readFile = nullReadFile,
+    dirname = nullDirname,
+  ) {
     // If output type is not object, disable mangling as we have no way of returning the map of the mangled names of
     // uniforms.
     options = options || {};
-    if (options.output && options.output !== 'object') {
+    if (options.output && options.output !== "object") {
       options.preserveUniforms = true;
     }
 
@@ -401,7 +572,6 @@ export class GlslMinify {
     this.dirname = dirname;
     this.tokens = new TokenMap(options);
   }
-
 
   public execute(content: string): Promise<GlslShader> {
     const input: GlslFile = { contents: content };
@@ -420,7 +590,7 @@ export class GlslMinify {
     return {
       sourceCode,
       uniforms: this.tokens.getUniforms(),
-      consts: this.constValues
+      consts: this.constValues,
     };
   }
 
@@ -458,20 +628,20 @@ export class GlslMinify {
     let output = content;
 
     // Remove carriage returns. Use newlines only.
-    output = output.replace('\r', '');
+    output = output.replace("\r", "");
 
     // Strip any #version directives
     if (this.options.stripVersion) {
-      output = output.replace(/#version.+/, '');
+      output = output.replace(/#version.+/, "");
     }
 
     // Remove C style comments
     const cStyleRegex = /\/\*[\s\S]*?\*\//g;
-    output = output.replace(cStyleRegex, '');
+    output = output.replace(cStyleRegex, "");
 
     // Remove C++ style comments
     const cppStyleRegex = /\/\/[^\n]*/g;
-    output = output.replace(cppStyleRegex, '\n');
+    output = output.replace(cppStyleRegex, "\n");
 
     return output;
   }
@@ -489,7 +659,7 @@ export class GlslMinify {
 
     this.constValues[constName] = {
       variableName: substitutionValue,
-      variableType: constType
+      variableType: constType,
     };
 
     return substitutionValue;
@@ -520,7 +690,7 @@ export class GlslMinify {
       this.tokens.reserveKeywords(keywords);
 
       // Remove the @nomangle line
-      output = output.replace(nomangleRegex, '');
+      output = output.replace(nomangleRegex, "");
     }
 
     // Process @define directives
@@ -535,7 +705,7 @@ export class GlslMinify {
       const replaceValue = match[2];
 
       // Remove the @define line
-      output = output.replace(defineRegex, '');
+      output = output.replace(defineRegex, "");
 
       // Replace all instances of the macro with its value
       //
@@ -577,13 +747,16 @@ export class GlslMinify {
       // Parse the tokens
       const parts = match[1].split(/\s/);
       if (parts.length !== 2) {
-        throw new Error('@const directives require two parameters');
+        throw new Error("@const directives require two parameters");
       }
       const constType = parts[0];
       const constName = parts[1];
 
       // Assign a substitution value
-      const substitutionValue = this.assignSubstitionValue(constName, constType);
+      const substitutionValue = this.assignSubstitionValue(
+        constName,
+        constType,
+      );
 
       // Replace the directive with a constant declaration. Note that `String.replace()` has special treatment of $ in
       // the replacement string parameter, so we provide a lambda to the replacement string to disable that.
@@ -596,37 +769,37 @@ export class GlslMinify {
 
   /** Determines the token type of a token string */
   protected static getTokenType(token: string): TokenType {
-    if (token === 'attribute') {
+    if (token === "attribute") {
       return TokenType.ttAttribute;
-    } else if (token === 'uniform') {
+    } else if (token === "uniform") {
       return TokenType.ttUniform;
-    } else if (token === 'varying') {
+    } else if (token === "varying") {
       return TokenType.ttVarying;
-    } else if (token === 'layout') {
+    } else if (token === "layout") {
       return TokenType.ttLayout;
-    } else if (token === 'in' || token === 'out') {
+    } else if (token === "in" || token === "out") {
       return TokenType.ttInOut;
     } else if (glslTypes.indexOf(token) > -1) {
       return TokenType.ttType;
     } else if (glslReservedKeywords.indexOf(token) > -1) {
       return TokenType.ttReservedToken;
-    } else if (token === ';') {
+    } else if (token === ";") {
       return TokenType.ttSemicolon;
-    } else if (token === '.') {
+    } else if (token === ".") {
       return TokenType.ttDot;
-    } else if (token === '(') {
+    } else if (token === "(") {
       return TokenType.ttOpenParenthesis;
-    } else if (token === ')') {
+    } else if (token === ")") {
       return TokenType.ttCloseParenthesis;
-    } else if (token === '{') {
+    } else if (token === "{") {
       return TokenType.ttOpenBrace;
-    } else if (token === '}') {
+    } else if (token === "}") {
       return TokenType.ttCloseBrace;
-    } else if (token === '[') {
+    } else if (token === "[") {
       return TokenType.ttOpenBracket;
-    } else if (token === ']') {
+    } else if (token === "]") {
       return TokenType.ttCloseBracket;
-    } else if (token[0] === '#') {
+    } else if (token[0] === "#") {
       return TokenType.ttPreprocessor;
     } else if (/[0-9]/.test(token[0])) {
       return TokenType.ttNumeric;
@@ -642,7 +815,7 @@ export class GlslMinify {
    */
   protected minifier(content: string): string {
     // Unlike the previous passes, on this one, we start with an empty output and build it up
-    let output = '';
+    let output = "";
 
     // The token regex looks for any of four items:
     //  1) An alphanumeric token (\w+), which may include underscores (or $ for substitution values)
@@ -688,9 +861,12 @@ export class GlslMinify {
       const type = GlslMinify.getTokenType(token);
 
       /** Helper function to concatenate `token` to `output` */
-      function writeToken(mayRequirePrecedingSpace: boolean, outputToken = token): void {
+      function writeToken(
+        mayRequirePrecedingSpace: boolean,
+        outputToken = token,
+      ): void {
         if (mayRequirePrecedingSpace && mayRequireTrailingSpace) {
-          output += ' ';
+          output += " ";
         }
         output += outputToken;
       }
@@ -711,78 +887,80 @@ export class GlslMinify {
 
         case TokenType.ttCloseBrace:
           if (--bracesDepth < 0) {
-            throw Error('Invalid GLSL. Unmatched close brace.');
+            throw Error("Invalid GLSL. Unmatched close brace.");
           }
           break;
 
         case TokenType.ttCloseBracket:
           if (--bracketsDepth < 0) {
-            throw Error('Invalid GLSL. Unmatched close bracket.');
+            throw Error("Invalid GLSL. Unmatched close bracket.");
           }
           break;
 
         case TokenType.ttCloseParenthesis:
           if (--parenthesesDepth < 0) {
-            throw Error('Invalid GLSL. Unmatched close parenthesis.');
+            throw Error("Invalid GLSL. Unmatched close parenthesis.");
           }
           break;
       }
 
       switch (type) {
         case TokenType.ttPreprocessor: {
-            // Preprocessor directives must always begin on a new line
-            if (output !== '' && !output.endsWith('\n')) {
-              output += '\n';
+          // Preprocessor directives must always begin on a new line
+          if (output !== "" && !output.endsWith("\n")) {
+            output += "\n";
+          }
+
+          // Special case for #define: we want to minify the value being defined
+          const defineRegex = /#define\s(\w+)\b(.*)/;
+          const subMatch = defineRegex.exec(token);
+          if (subMatch) {
+            if (this.options.preserveDefines) {
+              this.tokens.reserveKeywords([subMatch[1]]);
             }
-
-            // Special case for #define: we want to minify the value being defined
-            const defineRegex = /#define\s(\w+)\b(.*)/;
-            const subMatch = defineRegex.exec(token);
-            if (subMatch) {
-              if (this.options.preserveDefines) {
-                this.tokens.reserveKeywords([subMatch[1]]);
-              }
-              const minToken = this.tokens.minifyToken(subMatch[1]);
-              if (subMatch[2]?.[0] === '(') { // This is a function
-                output += '#define ' + minToken + this.minifier(subMatch[2]) + '\n';
-              } else {
-                output += '#define ' + minToken + ' ' + subMatch[2] + '\n';
-              }
-              break;
+            const minToken = this.tokens.minifyToken(subMatch[1]);
+            if (subMatch[2]?.[0] === "(") {
+              // This is a function
+              output +=
+                "#define " + minToken + this.minifier(subMatch[2]) + "\n";
+            } else {
+              output += "#define " + minToken + " " + subMatch[2] + "\n";
             }
-
-            // Preprocessor directives are special in that they require the newline
-            output += token + '\n';
-
-            // They also end any variable declaration
-            declarationType = TokenType.ttNone;
-            variableType = undefined;
-            mayRequireTrailingSpace = false;
             break;
           }
+
+          // Preprocessor directives are special in that they require the newline
+          output += token + "\n";
+
+          // They also end any variable declaration
+          declarationType = TokenType.ttNone;
+          variableType = undefined;
+          mayRequireTrailingSpace = false;
+          break;
+        }
 
         case TokenType.ttNumeric: {
-            // Special case for numerics: we can omit a zero following a dot (e.g. "1." is the same as "1.0") in GLSL
-            if (token === '0' && prevType === TokenType.ttDot) {
-              break;
-            }
-
-            writeToken(true);
-
-            mayRequireTrailingSpace = true;
+          // Special case for numerics: we can omit a zero following a dot (e.g. "1." is the same as "1.0") in GLSL
+          if (token === "0" && prevType === TokenType.ttDot) {
             break;
           }
+
+          writeToken(true);
+
+          mayRequireTrailingSpace = true;
+          break;
+        }
 
         case TokenType.ttSemicolon: {
-            writeToken(false);
+          writeToken(false);
 
-            // A semicolon ends a variable declaration
-            declarationType = TokenType.ttNone;
-            variableType = undefined;
-            hasLayout = false;
-            mayRequireTrailingSpace = false;
-            break;
-          }
+          // A semicolon ends a variable declaration
+          declarationType = TokenType.ttNone;
+          variableType = undefined;
+          hasLayout = false;
+          mayRequireTrailingSpace = false;
+          break;
+        }
 
         case TokenType.ttOpenBrace:
         case TokenType.ttOpenBracket:
@@ -792,108 +970,108 @@ export class GlslMinify {
         case TokenType.ttCloseParenthesis:
         case TokenType.ttOperator:
         case TokenType.ttDot: {
-            writeToken(false);
+          writeToken(false);
 
-            mayRequireTrailingSpace = false;
-            break;
-          }
+          mayRequireTrailingSpace = false;
+          break;
+        }
 
         case TokenType.ttInOut:
         case TokenType.ttAttribute:
         case TokenType.ttUniform:
         case TokenType.ttVarying: {
-            writeToken(true);
+          writeToken(true);
 
-            if (parenthesesDepth === 0 && bracesDepth === 0) {
-              declarationType = type;
-            } else {
-              declarationType = TokenType.ttNone;
-            }
-
-            mayRequireTrailingSpace = true;
-            break;
+          if (parenthesesDepth === 0 && bracesDepth === 0) {
+            declarationType = type;
+          } else {
+            declarationType = TokenType.ttNone;
           }
+
+          mayRequireTrailingSpace = true;
+          break;
+        }
 
         case TokenType.ttType: {
-            writeToken(true);
+          writeToken(true);
 
-            variableType = token;
-            mayRequireTrailingSpace = true;
-            break;
-          }
+          variableType = token;
+          mayRequireTrailingSpace = true;
+          break;
+        }
 
         case TokenType.ttLayout: {
-            writeToken(true);
+          writeToken(true);
 
-            hasLayout = true;
-            mayRequireTrailingSpace = true;
-            break;
-          }
+          hasLayout = true;
+          mayRequireTrailingSpace = true;
+          break;
+        }
 
         case TokenType.ttReservedToken: {
-            writeToken(true);
+          writeToken(true);
 
-            mayRequireTrailingSpace = true;
-            break;
-          }
+          mayRequireTrailingSpace = true;
+          break;
+        }
 
         case TokenType.ttToken: {
-            // Special case: a token following a dot is a swizzle mask. Leave it as-is.
-            if (prevType === TokenType.ttDot && isSwizzle(token)) {
-              writeToken(false);
-              mayRequireTrailingSpace = true;
-              break;
-            }
-
-            // Another special case: if the token follows a bracket, it is an array size not a variable/uniform
-            // declaration, e.g. `uniform vec3 u[ARRAY_SIZE]`.
-            let realDeclarationType = declarationType;
-            if (bracketsDepth > 0) {
-              realDeclarationType = TokenType.ttNone;
-            }
-
-            // Another special case: variable declarations inside parentheses are parameters and can safely be mangled.
-            if (parenthesesDepth > 0) {
-              realDeclarationType = TokenType.ttNone;
-            }
-
-            // Another special case: variable declarations inside braces are either locals, struct or interface block
-            // members, and can safely be mangled.
-            if (bracesDepth > 0) {
-              realDeclarationType = TokenType.ttNone;
-            }
-
-            switch (realDeclarationType) {
-              case TokenType.ttAttribute:
-              case TokenType.ttVarying:
-              case TokenType.ttInOut:
-                // For attribute, varying, and in/out declarations, turn off minification. Unless the statement has a
-                // layout qualifier, in which case binding is done by position instead of name, so we can safely mangle
-                // the variable.
-                if (!hasLayout) {
-                  this.tokens.reserveKeywords([token]);
-                }
-                writeToken(true, this.tokens.minifyToken(token));
-                break;
-
-              case TokenType.ttUniform:
-                if (this.options.preserveUniforms) {
-                  this.tokens.reserveKeywords([token]);
-                }
-                writeToken(true, this.tokens.minifyToken(token, variableType));
-                break;
-
-              default:
-                if (this.options.preserveVariables) {
-                  this.tokens.reserveKeywords([token]);
-                }
-                writeToken(true, this.tokens.minifyToken(token));
-                break;
-            }
-
+          // Special case: a token following a dot is a swizzle mask. Leave it as-is.
+          if (prevType === TokenType.ttDot && isSwizzle(token)) {
+            writeToken(false);
             mayRequireTrailingSpace = true;
             break;
           }
+
+          // Another special case: if the token follows a bracket, it is an array size not a variable/uniform
+          // declaration, e.g. `uniform vec3 u[ARRAY_SIZE]`.
+          let realDeclarationType = declarationType;
+          if (bracketsDepth > 0) {
+            realDeclarationType = TokenType.ttNone;
+          }
+
+          // Another special case: variable declarations inside parentheses are parameters and can safely be mangled.
+          if (parenthesesDepth > 0) {
+            realDeclarationType = TokenType.ttNone;
+          }
+
+          // Another special case: variable declarations inside braces are either locals, struct or interface block
+          // members, and can safely be mangled.
+          if (bracesDepth > 0) {
+            realDeclarationType = TokenType.ttNone;
+          }
+
+          switch (realDeclarationType) {
+            case TokenType.ttAttribute:
+            case TokenType.ttVarying:
+            case TokenType.ttInOut:
+              // For attribute, varying, and in/out declarations, turn off minification. Unless the statement has a
+              // layout qualifier, in which case binding is done by position instead of name, so we can safely mangle
+              // the variable.
+              if (!hasLayout) {
+                this.tokens.reserveKeywords([token]);
+              }
+              writeToken(true, this.tokens.minifyToken(token));
+              break;
+
+            case TokenType.ttUniform:
+              if (this.options.preserveUniforms) {
+                this.tokens.reserveKeywords([token]);
+              }
+              writeToken(true, this.tokens.minifyToken(token, variableType));
+              break;
+
+            default:
+              if (this.options.preserveVariables) {
+                this.tokens.reserveKeywords([token]);
+              }
+              writeToken(true, this.tokens.minifyToken(token));
+              break;
+          }
+
+          mayRequireTrailingSpace = true;
+          break;
+        }
       }
 
       // Advance to the next token
@@ -913,44 +1091,44 @@ export class GlslMinify {
     const esModule = this.options.esModule;
 
     switch (this.options.output) {
-      case 'sourceOnly':
+      case "sourceOnly":
         return program.sourceCode;
 
-      case 'source':
-        return `${esModule ? 'export default' : 'module.exports ='} ${GlslMinify.stringify(program.sourceCode)}`;
+      case "source":
+        return `${esModule ? "export default" : "module.exports ="} ${GlslMinify.stringify(program.sourceCode)}`;
 
-      case 'object':
+      case "object":
       default:
-        return `${esModule ? 'export default' : 'module.exports ='} ${GlslMinify.stringify(program)}`;
+        return `${esModule ? "export default" : "module.exports ="} ${GlslMinify.stringify(program)}`;
     }
   }
 
   /** Similar to JSON.stringify(), except without double-quotes around property names */
   public static stringify(obj: any): string {
     if (Array.isArray(obj)) {
-      let output = '[';
+      let output = "[";
       let isFirst = true;
       for (const value of obj) {
         if (!isFirst) {
-          output += ',';
+          output += ",";
         }
         output += this.stringify(value);
         isFirst = false;
       }
-      output += ']';
+      output += "]";
       return output;
-    } else if (typeof(obj) === 'object') {
-      let output = '{';
+    } else if (typeof obj === "object") {
+      let output = "{";
       let isFirst = true;
       for (const prop in obj) {
         const value = obj[prop];
         if (!isFirst) {
-          output += ',';
+          output += ",";
         }
-        output += prop + ':' + this.stringify(value);
+        output += prop + ":" + this.stringify(value);
         isFirst = false;
       }
-      output += '}';
+      output += "}";
       return output;
     } else {
       return JSON.stringify(obj);
