@@ -3,7 +3,7 @@
 
 export interface GlslVariable {
   /** Variable type, e.g. 'vec3' or 'float' */
-  variableType: string;
+  variableType: string | undefined;
 
   /** Minified variable name */
   variableName: string;
@@ -289,13 +289,13 @@ const glslBuiltinFunctions = [
 ];
 
 /** List of GLSL reserved keywords to avoid mangling. We automatically include any gl_ variables. */
-const glslReservedKeywords = [].concat(
-  glslTypes,
-  glslTypeQualifiers,
-  glslConstantValues,
-  glslControlKeywords,
-  glslBuiltinFunctions,
-);
+const glslReservedKeywords = [
+  ...glslTypes,
+  ...glslTypeQualifiers,
+  ...glslConstantValues,
+  ...glslControlKeywords,
+  ...glslBuiltinFunctions,
+];
 
 // Function to test whether a given string is a swizzle identifier
 const isSwizzle = (token: string) =>
@@ -490,10 +490,10 @@ function nullReadFile(
 }
 
 /** Implementation of NodeJS's dirname() API */
-export type DirnameImpl = (p: string) => string;
+export type DirnameImpl = (p: string) => string | undefined;
 
 /** Stub implementation of NodeJS's dirname() API to work in browsers and non-NodeJS environments */
-export function nullDirname(_p: string): string {
+export function nullDirname(_p: string): string | undefined {
   return undefined;
 }
 
@@ -832,7 +832,7 @@ export class GlslMinify {
     let declarationType = TokenType.ttNone;
 
     /** The last seen variable type (one of the glslTypes string values) */
-    let variableType: string;
+    let variableType: string | undefined;
 
     /** Set when the previous token may require whitespace separating it from the next token */
     let mayRequireTrailingSpace = false;
@@ -855,21 +855,25 @@ export class GlslMinify {
     /** Token type of the immediately preceding token */
     let prevType = TokenType.ttNone;
 
-    let match: string[];
-    while ((match = tokenRegex.exec(content))) {
+    /** Helper function to concatenate `token` to `output` */
+    function writeToken(
+      mayRequirePrecedingSpace: boolean,
+      outputToken: string,
+    ): void {
+      if (mayRequirePrecedingSpace && mayRequireTrailingSpace) {
+        output += " ";
+      }
+      output += outputToken;
+    }
+    let match: string[] | null;
+    while (true) {
+      match = tokenRegex.exec(content)
+      if (!match) {
+        break;
+      }
       const token = match[0];
       const type = GlslMinify.getTokenType(token);
 
-      /** Helper function to concatenate `token` to `output` */
-      function writeToken(
-        mayRequirePrecedingSpace: boolean,
-        outputToken = token,
-      ): void {
-        if (mayRequirePrecedingSpace && mayRequireTrailingSpace) {
-          output += " ";
-        }
-        output += outputToken;
-      }
 
       // Update depth counters
       switch (type) {
@@ -945,14 +949,14 @@ export class GlslMinify {
             break;
           }
 
-          writeToken(true);
+          writeToken(true, token);
 
           mayRequireTrailingSpace = true;
           break;
         }
 
         case TokenType.ttSemicolon: {
-          writeToken(false);
+          writeToken(false, token);
 
           // A semicolon ends a variable declaration
           declarationType = TokenType.ttNone;
@@ -970,7 +974,7 @@ export class GlslMinify {
         case TokenType.ttCloseParenthesis:
         case TokenType.ttOperator:
         case TokenType.ttDot: {
-          writeToken(false);
+          writeToken(false, token);
 
           mayRequireTrailingSpace = false;
           break;
@@ -980,7 +984,7 @@ export class GlslMinify {
         case TokenType.ttAttribute:
         case TokenType.ttUniform:
         case TokenType.ttVarying: {
-          writeToken(true);
+          writeToken(true, token);
 
           if (parenthesesDepth === 0 && bracesDepth === 0) {
             declarationType = type;
@@ -993,7 +997,7 @@ export class GlslMinify {
         }
 
         case TokenType.ttType: {
-          writeToken(true);
+          writeToken(true, token);
 
           variableType = token;
           mayRequireTrailingSpace = true;
@@ -1001,7 +1005,7 @@ export class GlslMinify {
         }
 
         case TokenType.ttLayout: {
-          writeToken(true);
+          writeToken(true, token);
 
           hasLayout = true;
           mayRequireTrailingSpace = true;
@@ -1009,7 +1013,7 @@ export class GlslMinify {
         }
 
         case TokenType.ttReservedToken: {
-          writeToken(true);
+          writeToken(true, token);
 
           mayRequireTrailingSpace = true;
           break;
@@ -1018,7 +1022,7 @@ export class GlslMinify {
         case TokenType.ttToken: {
           // Special case: a token following a dot is a swizzle mask. Leave it as-is.
           if (prevType === TokenType.ttDot && isSwizzle(token)) {
-            writeToken(false);
+            writeToken(false, token);
             mayRequireTrailingSpace = true;
             break;
           }
