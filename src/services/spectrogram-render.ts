@@ -1,8 +1,173 @@
 import { colorRamp, Gradient, HEATED_METAL_GRADIENT } from "./color-util";
-import { Circular2DBuffer, lerp } from "./math-util";
-import FragmentShader from "./shaders/fragment.glsl";
-import VertexShader from "./shaders/vertex.glsl";
+import { TypedArray, lerp, mod } from "./math-util";
+import FragmentShaderSrc from "./shaders/fragment.glsl";
+import VertexShaderSrc from "./shaders/vertex.glsl";
 import { Scale } from "./spectrogram";
+import { GlslMinify } from "./glsl-loader";
+
+export class Circular2DDataBuffer<T extends TypedArray> {
+  // Number of columns in the buffer
+  public numColumns: number;
+
+  // Number of rows in the buffer
+  public numRows: number;
+
+  // Size of each element in the buffer (e.g., number of bytes or components)
+  public elementSize: number;
+
+  // Starting index of the circular buffer
+  public startIndex: number;
+
+  // Current length of the data in the buffer (number of columns filled)
+  public currentLength: number;
+
+  // The actual buffer holding the data, of type T (which extends TypedArray)
+  public bufferData: T;
+
+  constructor(
+    // Either the TypedArray constructor or an existing TypedArray instance
+    TypedArrayConstructorOrData: T | { new (length: number): T },
+    // Number of columns in the buffer
+    numColumns: number,
+    // Number of rows in the buffer
+    numRows: number,
+    // Size of each element in the buffer (e.g., number of bytes or components)
+    elementSize: number,
+    // Initial starting index of the circular buffer (default is 0)
+    startIndex: number = 0,
+    // Initial length of the data in the buffer (default is 0)
+    currentLength: number = 0,
+  ) {
+    this.numColumns = numColumns;
+    this.numRows = numRows;
+    this.elementSize = elementSize;
+    this.startIndex = startIndex;
+    this.currentLength = currentLength;
+
+    // Initialize the data buffer
+    if (typeof TypedArrayConstructorOrData === "function") {
+      // If TypedArrayConstructorOrData is a constructor, create a new TypedArray instance
+      this.bufferData = new TypedArrayConstructorOrData(
+        numColumns * numRows * elementSize,
+      );
+    } else {
+      // If TypedArrayConstructorOrData is an existing TypedArray instance, use it directly
+      this.bufferData = TypedArrayConstructorOrData;
+    }
+  }
+
+  // Adds new data to the buffer. newData has length
+  enqueue(newData: T): void {
+    // Calculate the number of columns in the incoming data. Remaining data will be ignored
+    const numNewColumns = Math.floor(
+      newData.length / (this.elementSize * this.numRows),
+    );
+
+    // Loop through each column of the incoming data
+    for (let i = 0; i < numNewColumns; i += 1) {
+      // Calculate the target column index in the circular buffer
+      const targetIndex = mod(
+        this.startIndex + this.currentLength + i,
+        this.numColumns,
+      );
+
+      // Set the data for the target column
+      this.bufferData.set(
+        newData.subarray(i * this.numRows, (i + 1) * this.numRows),
+        targetIndex * this.numRows,
+      );
+    }
+
+    // Update the current length of the buffer with the number of new columns
+    this.currentLength += numNewColumns;
+
+    // If the buffer exceeds its capacity, adjust the start index and current length
+    if (this.currentLength > this.numColumns) {
+      this.startIndex = mod(
+        this.startIndex + this.currentLength - this.numColumns,
+        this.numColumns,
+      );
+      this.currentLength = this.numColumns;
+    }
+  }
+
+  // Resizes the width of the buffer, preserving newer data
+  resizeWidth(newNumColumns: number): void {
+    // If the new width is the same as the current width, do nothing
+    if (newNumColumns === this.numColumns) {
+      return;
+    }
+
+    // Create a new buffer with the new width
+    const newBufferData: T = new (Object.getPrototypeOf(
+      this.bufferData,
+    ).constructor)(newNumColumns * this.numRows * this.elementSize);
+
+    // Copy the most recent data to the new buffer
+    for (let i = 0; i < Math.min(this.currentLength, newNumColumns); i += 1) {
+      const newIndex = Math.min(this.currentLength, newNumColumns) - i - 1;
+      const oldIndex = mod(
+        this.startIndex + this.currentLength - i - 1,
+        this.numColumns,
+      );
+      newBufferData.set(
+        this.bufferData.subarray(
+          oldIndex * this.numRows,
+          (oldIndex + 1) * this.numRows,
+        ),
+        newIndex * this.numRows,
+      );
+    }
+
+    // Replace the old buffer with the new buffer
+    this.bufferData = newBufferData;
+    this.numColumns = newNumColumns;
+
+    // Adjust the current length and start index
+    if (this.currentLength >= this.numColumns) {
+      this.currentLength = this.numColumns;
+    }
+    this.startIndex = 0;
+  }
+
+  // Clears the buffer
+  clear(): void {
+    // Create an empty buffer with the same dimensions
+    const emptyBufferData: T = new (Object.getPrototypeOf(
+      this.bufferData,
+    ).constructor)(this.numColumns * this.numRows * this.elementSize);
+
+    // Replace the old buffer with the empty buffer
+    this.bufferData = emptyBufferData;
+    this.startIndex = 0;
+    this.currentLength = 0;
+  }
+}
+
+const glslLoader = new GlslMinify(FragmentShaderSrc);
+const FragmentShader = await glslLoader.execute(FragmentShaderSrc);
+const VertexShader = await glslLoader.execute(VertexShaderSrc);
+
+// Helper function to get all uniform locations
+const getAllUniformLocations = (
+  program: WebGLProgram,
+  ctx: WebGLRenderingContext,
+) => {
+  const uniformLocations: Map<string, WebGLUniformLocation | null> = new Map();
+  const numUniforms = ctx.getProgramParameter(program, ctx.ACTIVE_UNIFORMS);
+
+  for (let i = 0; i < numUniforms; ++i) {
+    const uniformInfo = ctx.getActiveUniform(program, i);
+    if (!uniformInfo) {
+      break;
+    }
+    const name = uniformInfo.name;
+    const location = ctx.getUniformLocation(program, name);
+    uniformLocations.set(name, location?.toString() || null);
+  }
+
+  return uniformLocations;
+};
 
 export interface RenderParameters {
   contrast: number;
@@ -25,7 +190,7 @@ export const DEFAULT_RENDER_PARAMETERS: RenderParameters = {
   sampleRate: 48000,
   windowSize: 4096,
   scale: "mel",
-  gradient: HEATED_METAL_GRADIENT, // assuming this is a valid Gradient
+  gradient: HEATED_METAL_GRADIENT,
 };
 
 function merge<T>(
@@ -116,7 +281,9 @@ export class SpectrogramGPURenderer {
     const ctx = this.canvas.getContext("webgl");
 
     if (ctx === null) {
-      throw new Error("Unable to create WebGL context");
+      throw new Error(
+        "Unable to create WebGL context. Your browser or machine may not support it.",
+      );
     }
     this.ctx = ctx;
 
@@ -239,7 +406,7 @@ export class SpectrogramGPURenderer {
       this.parameters!.contrast,
       LERP_AMOUNT,
     );
-    // Don't interpolate the contrast when it gets close toe 0 to avoid numerical instability in
+    // Don't interpolate the contrast when it gets close to 0 to avoid numerical instability in
     // the shader
     if (this.currentContrast < 0.05) {
       this.currentContrast = 0.0;
@@ -387,7 +554,7 @@ export class SpectrogramGPURenderer {
   }
 
   public updateSpectrogram(
-    circular2dQueue: Circular2DBuffer<Float32Array>,
+    circular2dQueue: Circular2DDataBuffer<Float32Array>,
     forceFullRender: boolean = false,
   ) {
     this.ctx.bindTexture(this.ctx.TEXTURE_2D, this.spectrogramTexture);
@@ -397,50 +564,51 @@ export class SpectrogramGPURenderer {
         this.ctx.TEXTURE_2D,
         0,
         this.ctx.LUMINANCE,
-        circular2dQueue.height,
-        circular2dQueue.width,
+        circular2dQueue.numRows,
+        circular2dQueue.numColumns,
         0,
         this.ctx.LUMINANCE,
         this.ctx.FLOAT,
-        circular2dQueue.data,
+        circular2dQueue.bufferData,
       );
-    } else if (circular2dQueue.start !== this.lastSpectrogramStart) {
-      if (circular2dQueue.start >= this.lastSpectrogramStart) {
+    } else if (circular2dQueue.startIndex !== this.lastSpectrogramStart) {
+      if (circular2dQueue.startIndex >= this.lastSpectrogramStart) {
         this.updateSpectrogramPartial(
-          circular2dQueue.height,
-          circular2dQueue.start - this.lastSpectrogramStart,
+          circular2dQueue.numRows,
+          circular2dQueue.startIndex - this.lastSpectrogramStart,
           this.lastSpectrogramStart,
-          circular2dQueue.data,
+          circular2dQueue.bufferData,
         );
       } else {
         this.updateSpectrogramPartial(
-          circular2dQueue.height,
-          circular2dQueue.start,
+          circular2dQueue.numRows,
+          circular2dQueue.startIndex,
           0,
-          circular2dQueue.data,
+          circular2dQueue.bufferData,
         );
         this.updateSpectrogramPartial(
-          circular2dQueue.height,
-          circular2dQueue.width - this.lastSpectrogramStart,
+          circular2dQueue.numRows,
+          circular2dQueue.numColumns - this.lastSpectrogramStart,
           this.lastSpectrogramStart,
-          circular2dQueue.data,
+          circular2dQueue.bufferData,
         );
       }
-    } else if (circular2dQueue.length > this.lastSpectrogramLength) {
+    } else if (circular2dQueue.currentLength > this.lastSpectrogramLength) {
       this.updateSpectrogramPartial(
-        circular2dQueue.height,
-        circular2dQueue.length - this.lastSpectrogramLength,
+        circular2dQueue.numRows,
+        circular2dQueue.currentLength - this.lastSpectrogramLength,
         this.lastSpectrogramLength,
-        circular2dQueue.data,
+        circular2dQueue.bufferData,
       );
     }
 
-    this.lastSpectrogramLength = circular2dQueue.length;
-    this.lastSpectrogramStart = circular2dQueue.start;
-    this.spectrogramOffset = circular2dQueue.start / circular2dQueue.width;
+    this.lastSpectrogramLength = circular2dQueue.currentLength;
+    this.lastSpectrogramStart = circular2dQueue.startIndex;
+    this.spectrogramOffset =
+      circular2dQueue.startIndex / circular2dQueue.numColumns;
     this.spectrogramLength =
-      -0.5 / circular2dQueue.width +
-      circular2dQueue.length / circular2dQueue.width;
+      -0.5 / circular2dQueue.numColumns +
+      circular2dQueue.currentLength / circular2dQueue.numColumns;
   }
 
   private updateSpectrogramPartial(
@@ -496,6 +664,7 @@ export class SpectrogramGPURenderer {
     this.ctx.attachShader(program, vertexShader);
     this.ctx.attachShader(program, fragmentShader);
     this.ctx.linkProgram(program);
+    this.ctx.validateProgram(program);
 
     if (!this.ctx.getProgramParameter(program, this.ctx.LINK_STATUS)) {
       const error = this.ctx.getProgramInfoLog(program);

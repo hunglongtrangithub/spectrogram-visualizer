@@ -573,7 +573,7 @@ export class GlslMinify {
     this.tokens = new TokenMap(options);
   }
 
-  public execute(content: string): Promise<GlslShader> {
+  public async execute(content: string): Promise<GlslShader> {
     const input: GlslFile = { contents: content };
     return this.executeFile(input);
   }
@@ -867,13 +867,12 @@ export class GlslMinify {
     }
     let match: string[] | null;
     while (true) {
-      match = tokenRegex.exec(content)
+      match = tokenRegex.exec(content);
       if (!match) {
         break;
       }
       const token = match[0];
       const type = GlslMinify.getTokenType(token);
-
 
       // Update depth counters
       switch (type) {

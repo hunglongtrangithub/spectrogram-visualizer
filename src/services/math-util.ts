@@ -34,7 +34,7 @@ export function inverseLerp(a: number, b: number, n: number): number {
 }
 
 export function mod(x: number, y: number): number {
-  return ((x % y) + y) % y;
+  return ((x % y) + y) % y; // prevent negative results
 }
 
 const BLACKMAN_HARRIS_COEFFICIENTS: number[] = [
@@ -50,90 +50,4 @@ export function blackmanHarris(n: number, samples: number): number {
       Math.cos((2 * Math.PI * i * n) / samples);
   }
   return result;
-}
-
-// Circular queue of 2D data along the x-axis
-export class Circular2DBuffer<T extends TypedArray> {
-  public width: number;
-
-  public height: number;
-
-  public elementSize: number;
-
-  public start: number;
-
-  public length: number;
-
-  public data: T;
-
-  constructor(
-    TypeOrData: T | { new (length: number): T },
-    width: number,
-    height: number,
-    elementSize: number,
-    start: number = 0,
-    length: number = 0,
-  ) {
-    this.width = width;
-    this.height = height;
-    this.elementSize = elementSize;
-    this.start = start;
-    this.length = length;
-    if (typeof TypeOrData === "function") {
-      this.data = new TypeOrData(width * height * elementSize);
-    } else {
-      this.data = TypeOrData;
-    }
-  }
-
-  enqueue(data: T): void {
-    const dataWidth = data.length / (this.elementSize * this.height);
-    for (let i = 0; i < dataWidth; i += 1) {
-      const x = mod(this.start + this.length + i, this.width);
-      this.data.set(
-        data.subarray(i * this.height, (i + 1) * this.height),
-        x * this.height,
-      );
-    }
-
-    this.length += dataWidth;
-    if (this.length > this.width) {
-      this.start = mod(this.start + this.length - this.width, this.width);
-      this.length = this.width;
-    }
-  }
-
-  // Resizes the width of the queue, preserving newer image data
-  resizeWidth(width: number) {
-    if (width === this.width) {
-      return;
-    }
-
-    const newData: T = new (Object.getPrototypeOf(this.data).constructor)(
-      width * this.height * this.elementSize,
-    );
-    for (let i = 0; i < Math.min(this.length, width); i += 1) {
-      const newX = Math.min(this.length, width) - i - 1;
-      const oldX = mod(this.start + this.length - i - 1, this.width);
-      newData.set(
-        this.data.subarray(oldX * this.height, (oldX + 1) * this.height),
-        newX * this.height,
-      );
-    }
-    this.data = newData;
-    this.width = width;
-    if (this.length >= this.width) {
-      this.length = this.width;
-    }
-    this.start = 0;
-  }
-
-  clear() {
-    const newData: T = new (Object.getPrototypeOf(this.data).constructor)(
-      this.width * this.height * this.elementSize,
-    );
-    this.data = newData;
-    this.start = 0;
-    this.length = 0;
-  }
 }

@@ -23,16 +23,17 @@ ctx.onmessage = (event: { data: Message["request"] }) => {
           options: spectrogramOptions,
           spectrogramData: spectrogram,
         } = generateSpectrogram(samples, samplesStart, samplesLength, options);
-
+        const spectrogramBuffer = spectrogram.buffer as ArrayBuffer;
+        const inputBuffer = samples.buffer as ArrayBuffer;
         const response: ComputeSpectrogramMessage["response"] = {
           payload: {
             spectrogramWindowCount,
             spectrogramOptions,
-            spectrogramBuffer: spectrogram.buffer,
-            inputBuffer: samples.buffer,
+            spectrogramBuffer,
+            inputBuffer,
           },
         };
-        ctx.postMessage(response, [spectrogram.buffer, samples.buffer]);
+        ctx.postMessage(response, [spectrogramBuffer, inputBuffer]);
       } catch (error) {
         const response: ComputeSpectrogramMessage["response"] = {
           error: error as Error,

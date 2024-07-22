@@ -9,6 +9,8 @@ import {
 } from "./math-util";
 
 export type Scale = "linear" | "mel";
+export const SPECTROGRAM_WINDOW_SIZE = 4096;
+export const SPECTROGRAM_WINDOW_STEPSIZE = 1024;
 
 export interface SpectrogramOptions {
   isStart?: boolean;
@@ -28,6 +30,7 @@ export interface SpectrogramResult {
   spectrogramData: Float32Array;
 }
 
+// Helper function to calculate the spectrogram for a single frame
 function generateSpectrogramForSingleFrame(
   windowSamples: Float32Array,
   resultBuffer: Float32Array,
@@ -80,15 +83,19 @@ function generateSpectrogramForSingleFrame(
   }
 }
 
+// Generate spectrogram for the given audio samples at the given start index and length
+// NOTE: when isStart or isEnd are false:
+// if samplesLength <= windowSize - windowStepSize, numWindows <= 0
+// if windowSize - windowStepSize < samplesLength <= windowSize, numWindows = 1
 export function generateSpectrogram(
-  samples: Float32Array,
-  samplesStart: number,
-  samplesLength: number,
+  samples: Float32Array, // The whole audio samples
+  samplesStart: number, // The start index in the audio samples to calculate the spectrogram for
+  samplesLength: number, // The length of the audio samples to calculate the spectrogram for
   {
     isStart = false, // Is the frame at the start of the audio
     isEnd = false, // Is the frame at the end of the audio
-    windowSize = 4096, // Size of the FFT window in samples
-    windowStepSize = 1024, // Number of samples between each FFT window
+    windowSize = SPECTROGRAM_WINDOW_SIZE, // Size of the FFT window in samples
+    windowStepSize = SPECTROGRAM_WINDOW_STEPSIZE, // Number of samples between each FFT window
     minFrequencyHz, // Smallest frequency in Hz to calculate the spectrogram for
     maxFrequencyHz, // Largest frequency in Hz to calculate the spectrogram for
     sampleRate, // Sample rate of the audio
@@ -105,48 +112,54 @@ export function generateSpectrogram(
   if (scaleSize === undefined) {
     scaleSize = windowSize / 2;
   }
-  if (windowSize % windowStepSize !== 0) {
-    throw new Error(
-      "Window step size must be evenly divisible by the window size",
-    );
-  }
 
-  let numWindows =
-    Math.ceil(samplesLength / windowStepSize) -
-    Math.floor(windowSize / windowStepSize) +
-    1;
+  let numWindows = Math.ceil((samplesLength - windowSize) / windowStepSize + 1);
+  if (numWindows < 0) {
+    numWindows = 0;
+  }
   let startIdx = samplesStart;
+
   if (isStart || isEnd) {
-    const additionalWindows = Math.floor(windowSize / windowStepSize) - 1;
+    // Pad the spectrogram with 1 additional window if it is at the start or end
+    const additionalWindows = Math.floor(windowSize / windowStepSize);
     if (isStart) {
+      // Pad at the start
       numWindows += additionalWindows;
       startIdx -= additionalWindows * windowStepSize;
     }
     if (isEnd) {
+      // Pad at the end
       numWindows += additionalWindows;
     }
   }
 
+  // The result buffer to store the spectrograms.
+  // NOTE: scaleSize is the number of rows in the spectrogram, numWindows is the number of columns. Will be fed to the Circular2DDataBuffer
   const result = new Float32Array(scaleSize * numWindows);
-  const windowSamples = new Float32Array(windowSize);
 
+  // The buffer to store the samples for the current window in each iteration
+  const windowSamples = new Float32Array(windowSize);
+  // i is the start index of the window, windowIdx is the index of the window in the result
   for (
     let i = startIdx, windowIdx = 0;
     windowIdx < numWindows * scaleSize;
     i += windowStepSize, windowIdx += scaleSize
   ) {
+    // Fill the window with samples
     for (let j = 0; j < windowSize; j += 1) {
       const sampleIdx = i + j;
       if (
         sampleIdx < samplesStart ||
         sampleIdx >= samplesStart + samplesLength
       ) {
+        // Pad with zeros if the sample is outside the range
         windowSamples[j] = 0;
       } else {
         windowSamples[j] = samples[sampleIdx];
       }
     }
 
+    // This will calculate and store the spectrogram for the current window at index windowIdx with length scaleSize
     generateSpectrogramForSingleFrame(
       windowSamples,
       result,

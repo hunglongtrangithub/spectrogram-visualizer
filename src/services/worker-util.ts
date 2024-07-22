@@ -86,6 +86,7 @@ export async function offThreadGenerateSpectrogram(
   samplesLength: number,
   options: SpectrogramOptions,
 ): Promise<SpectrogramResult & { input: Float32Array }> {
+  const samplesBuffer = samples.buffer as ArrayBuffer;
   const {
     spectrogramWindowCount,
     spectrogramOptions,
@@ -94,12 +95,12 @@ export async function offThreadGenerateSpectrogram(
   } = await queueTask<ComputeSpectrogramMessage>(
     ACTION_COMPUTE_SPECTROGRAM,
     {
-      samplesBuffer: samples.buffer,
+      samplesBuffer,
       samplesStart,
       samplesLength,
       options,
     },
-    [samples.buffer],
+    [samplesBuffer],
   );
 
   return {

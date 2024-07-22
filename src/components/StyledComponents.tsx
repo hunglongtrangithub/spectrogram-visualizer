@@ -67,3 +67,8 @@ export const SettingsDrawerInner = styled(Paper)(({ theme }) => ({
   boxSizing: "border-box",
   margin: `${theme.spacing(2)}px auto 0 auto`,
 }));
+
+export const SliderLabelContainer = styled("div")({
+  display: "flex",
+  justifyContent: "space-between",
+});

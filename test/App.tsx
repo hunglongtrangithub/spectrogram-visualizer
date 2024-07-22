@@ -5,13 +5,19 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
 
-import { useCallback, useState, useRef, useEffect } from "react";
+import React, { useCallback, useState, useRef, useEffect } from "react";
 
-import SpectrogramManager from "./services";
-import Controls from "./components/Controls";
-import { RenderParameters } from "./services/spectrogram-render";
+import SpectrogramManager from "../src/services";
+import Controls from "../src/components/Controls";
+import { RenderParameters } from "../src/services/spectrogram-render";
 
 export type PlayState = "stopped" | "loading-file" | "loading-mic" | "playing";
+
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
 
 const controlsTheme = createTheme({
   palette: {
@@ -40,7 +46,7 @@ function App() {
 
   useEffect(() => {
     if (leftSpectrogramRef.current && rightSpectrogramRef.current) {
-      console.log("Initializing spectrogram manager...");
+      toast.info("Initializing spectrogram manager");
       try {
         const manager = new SpectrogramManager(
           [leftSpectrogramRef.current, rightSpectrogramRef.current],

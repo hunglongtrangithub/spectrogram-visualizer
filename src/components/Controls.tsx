@@ -1,11 +1,8 @@
 import Button from "@mui/material/Button";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
-import ScopedCssBaseline from "@mui/material/ScopedCssBaseline";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import Typography from "@mui/material/Typography";
-import pink from "@mui/material/colors/pink";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import AudiotrackIcon from "@mui/icons-material/Audiotrack";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -35,48 +32,45 @@ import {
   SettingsDrawer,
   SettingsDrawerInner,
 } from "./StyledComponents";
+import generateLabelledSlider from "./LabelSlider";
 
 import { GRADIENTS } from "../services/color-util";
 import { hzToMel, melToHz } from "../services/math-util";
 import { Scale } from "../services/spectrogram";
 import { RenderParameters } from "../services/spectrogram-render";
+import { PlayState } from "../App";
 
-export type PlayState = "stopped" | "loading-file" | "loading-mic" | "playing";
+const formatHz = (hz: number) => {
+  if (hz < 999.5) {
+    return `${hz.toPrecision(3)} Hz`;
+  }
+  return `${(hz / 1000).toPrecision(3)} kHz`;
+};
 
-const controlsTheme = createTheme({
-  palette: {
-    mode: "dark",
-    background: {
-      default: "#101010",
-      paper: "#222222",
-    },
-    primary: {
-      main: "#ffffff",
-    },
-    secondary: pink,
-  },
-});
-function generateLabelledSlider(): [
-  React.FC,
-  React.Dispatch<React.SetStateAction<number>>,
-] {
-  const [value, setValue] = React.useState(0);
-  const Slider: React.FC = () => (
-    <div>
-      <input
-        type="range"
-        min="0"
-        max="100"
-        value={value}
-        onChange={(e) => setValue(Number(e.target.value))}
-      />
-      <label>{value}</label>
-    </div>
-  );
+const formatPercentage = (value: number) => {
+  if (value * 100 >= 999.5) {
+    return `${(value * 100).toPrecision(4)}%`;
+  }
+  return `${(value * 100).toPrecision(3)}%`;
+};
 
-  return [Slider, setValue];
-}
-export default function Controls() {
+export default function Controls({
+  playState,
+  setPlayState,
+  onRenderFromMicrophone,
+  onRenderFromFile,
+  onStop,
+  onClearSpectrogram,
+  onRenderParametersUpdate,
+}: {
+  playState: PlayState;
+  setPlayState: React.Dispatch<React.SetStateAction<PlayState>>;
+  onRenderFromMicrophone: () => void;
+  onRenderFromFile: (file: ArrayBuffer) => void;
+  onStop: () => void;
+  onClearSpectrogram: () => void;
+  onRenderParametersUpdate: (settings: Partial<RenderParameters>) => void;
+}) {
   const { current: defaultParameters } = useRef({
     sensitivity: 0.5,
     contrast: 0.5,
@@ -86,7 +80,6 @@ export default function Controls() {
     scale: "mel" as Scale,
     gradient: "Heated Metal",
   });
-  const [count, setCount] = useState(0);
   const isMobile = useMediaQuery("(max-width: 800px)");
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -104,8 +97,6 @@ export default function Controls() {
     [],
   );
 
-  const fileRef = useRef<HTMLInputElement | null>(null);
-  const [playState, setPlayState] = useState<PlayState>("stopped");
   const [SensitivitySlider, setSensitivity] = useMemo(
     generateLabelledSlider,
     [],
@@ -120,6 +111,136 @@ export default function Controls() {
     generateLabelledSlider,
     [],
   );
+
+  const fileRef = useRef<HTMLInputElement | null>(null);
+
+  const onPlayMicrophoneClick = useCallback(() => {
+    setPlayState("loading-mic");
+    onRenderFromMicrophone();
+  }, [onRenderFromMicrophone, setPlayState]);
+  const onPlayFileClick = useCallback(() => {
+    if (fileRef.current === null) {
+      return;
+    }
+    fileRef.current.click();
+  }, [fileRef]);
+
+  const onFileChange = useCallback(() => {
+    if (
+      fileRef.current === null ||
+      fileRef.current.files === null ||
+      fileRef.current.files.length !== 1
+    ) {
+      return;
+    }
+
+    const file = fileRef.current.files[0];
+    const reader = new FileReader();
+    setPlayState("loading-file");
+
+    reader.addEventListener("load", () => {
+      if (fileRef.current !== null) {
+        fileRef.current.value = "";
+      }
+
+      if (reader.result instanceof ArrayBuffer) {
+        onRenderFromFile(reader.result);
+      } else {
+        setPlayState("stopped");
+      }
+    });
+    reader.readAsArrayBuffer(file);
+  }, [fileRef, setPlayState, onRenderFromFile]);
+
+  const onStopClick = useCallback(() => {
+    onStop();
+    setPlayState("stopped");
+  }, [onStop, setPlayState]);
+
+  const onSensitivityChange = useCallback(
+    (value: number) => {
+      defaultParameters.sensitivity = value;
+      const scaledValue = 10 ** (value * 3) - 1;
+      onRenderParametersUpdate({ sensitivity: scaledValue });
+      setSensitivity(formatPercentage(value));
+    },
+    [defaultParameters, onRenderParametersUpdate, setSensitivity],
+  );
+  const onContrastChange = useCallback(
+    (value: number) => {
+      defaultParameters.contrast = value;
+      const scaledValue = 10 ** (value * 6) - 1;
+      onRenderParametersUpdate({ contrast: scaledValue });
+      setContrast(formatPercentage(value));
+    },
+    [defaultParameters, onRenderParametersUpdate, setContrast],
+  );
+  const onZoomChange = useCallback(
+    (value: number) => {
+      defaultParameters.zoom = value;
+      onRenderParametersUpdate({ zoom: value });
+      setZoom(formatPercentage(value));
+    },
+    [defaultParameters, onRenderParametersUpdate, setZoom],
+  );
+  const onMinFreqChange = useCallback(
+    (value: number) => {
+      const hz = melToHz(value);
+      defaultParameters.minFrequency = hz;
+      onRenderParametersUpdate({ minFrequencyHz: hz });
+      setMinFrequency(formatHz(hz));
+    },
+    [defaultParameters, onRenderParametersUpdate, setMinFrequency],
+  );
+  const onMaxFreqChange = useCallback(
+    (value: number) => {
+      const hz = melToHz(value);
+      defaultParameters.maxFrequency = hz;
+      onRenderParametersUpdate({ maxFrequencyHz: hz });
+      setMaxFrequency(formatHz(hz));
+    },
+    [defaultParameters, onRenderParametersUpdate, setMaxFrequency],
+  );
+  const onScaleChange = useCallback(
+    (event: SelectChangeEvent) => {
+      if (typeof event.target.value === "string") {
+        defaultParameters.scale = event.target.value as Scale;
+        onRenderParametersUpdate({ scale: event.target.value as Scale });
+      }
+    },
+    [defaultParameters, onRenderParametersUpdate],
+  );
+  const onGradientChange = useCallback(
+    (event: SelectChangeEvent) => {
+      if (typeof event.target.value === "string") {
+        const gradientData = GRADIENTS.find(
+          (g) => g.name === event.target.value,
+        );
+        if (gradientData !== undefined) {
+          defaultParameters.gradient = gradientData.name;
+          onRenderParametersUpdate({ gradient: gradientData.gradient });
+        }
+      }
+    },
+    [defaultParameters, onRenderParametersUpdate],
+  );
+
+  // Update all parameters on mount
+  useEffect(() => {
+    onSensitivityChange(defaultParameters.sensitivity);
+    onContrastChange(defaultParameters.contrast);
+    onZoomChange(defaultParameters.zoom);
+    onMinFreqChange(hzToMel(defaultParameters.minFrequency));
+    onMaxFreqChange(hzToMel(defaultParameters.maxFrequency));
+    onRenderParametersUpdate({ scale: defaultParameters.scale });
+
+    const gradientData = GRADIENTS.find(
+      (g) => g.name === defaultParameters.gradient,
+    );
+    if (gradientData !== undefined) {
+      onRenderParametersUpdate({ gradient: gradientData.gradient });
+    }
+  });
 
   const content = (
     <>
@@ -255,45 +376,38 @@ export default function Controls() {
   );
   return (
     <div className="controls">
-      <button onClick={() => setCount((count) => count + 1)}>
-        count is: {count}
-      </button>
-      <ThemeProvider theme={controlsTheme}>
-        <ScopedCssBaseline>
-          {isMobile ? (
-            <>
-              <SettingsButton
-                size="large"
-                variant="contained"
-                color="primary"
-                startIcon={<SettingsIcon />}
-                onClick={openSettings}
-                disableElevation
-              >
-                Settings
-              </SettingsButton>
-              <SettingsDrawer
-                anchor="bottom"
-                open={settingsOpen}
-                onClose={closeSettings}
-                PaperProps={{ elevation: 0, onClick: closeSettings }}
-              >
-                <SettingsDrawerInner elevation={16} onClick={onInnerPaperClick}>
-                  <SettingsHeader>
-                    <CloseButton aria-label="close" onClick={closeSettings}>
-                      <CloseIcon />
-                    </CloseButton>
-                    <Typography variant="subtitle1">Settings</Typography>
-                  </SettingsHeader>
-                  {content}
-                </SettingsDrawerInner>
-              </SettingsDrawer>
-            </>
-          ) : (
-            content
-          )}
-        </ScopedCssBaseline>
-      </ThemeProvider>
+      {isMobile ? (
+        <>
+          <SettingsButton
+            size="large"
+            variant="contained"
+            color="primary"
+            startIcon={<SettingsIcon />}
+            onClick={openSettings}
+            disableElevation
+          >
+            Settings
+          </SettingsButton>
+          <SettingsDrawer
+            anchor="bottom"
+            open={settingsOpen}
+            onClose={closeSettings}
+            PaperProps={{ elevation: 0, onClick: closeSettings }}
+          >
+            <SettingsDrawerInner elevation={16} onClick={onInnerPaperClick}>
+              <SettingsHeader>
+                <CloseButton aria-label="close" onClick={closeSettings}>
+                  <CloseIcon />
+                </CloseButton>
+                <Typography variant="subtitle1">Settings</Typography>
+              </SettingsHeader>
+              {content}
+            </SettingsDrawerInner>
+          </SettingsDrawer>
+        </>
+      ) : (
+        content
+      )}
     </div>
   );
 }

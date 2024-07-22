@@ -16,7 +16,7 @@ interface MessageBase<T, U, V> {
 export type ComputeSpectrogramMessage = MessageBase<
   typeof ACTION_COMPUTE_SPECTROGRAM,
   {
-    samplesBuffer: ArrayBufferLike;
+    samplesBuffer: ArrayBuffer;
     samplesStart: number;
     samplesLength: number;
     options: SpectrogramOptions;
@@ -24,8 +24,8 @@ export type ComputeSpectrogramMessage = MessageBase<
   {
     spectrogramWindowCount: number;
     spectrogramOptions: Required<SpectrogramOptions>;
-    spectrogramBuffer: ArrayBufferLike;
-    inputBuffer: ArrayBufferLike;
+    spectrogramBuffer: ArrayBuffer;
+    inputBuffer: ArrayBuffer;
   }
 >;
 
