@@ -83,7 +83,9 @@ class ChannelBufferProcessor extends AudioWorkletProcessor {
     // Initialize channel buffers
     for (let i = 0; i < this.numberOfChannels; i++) {
       // Each channel buffer has the size of the spectrogram buffer size * 2
-      this.channelBuffers.push(new CircularDataBuffer(this.spectrogramBufferSize * 2));
+      this.channelBuffers.push(
+        new CircularDataBuffer(this.spectrogramBufferSize * 2),
+      );
     }
 
     // Listen for stop message
