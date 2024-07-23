@@ -338,7 +338,6 @@ export default class SpectrogramManager {
       const { processedBuffers, sampleRate, isStart } = event.data.payload;
       if (processedBuffers.length > 0) {
         console.log(`Processing ${processedBuffers[0].length} samples`);
-        console.log(processedBuffers);
         await Promise.all(
           processedBuffers.map((buffer, i) =>
             this.visualizers[i].updateSpectrogramBuffer({
