@@ -25,7 +25,7 @@ class FixedBufferSizeArrayCircularDataBuffer {
       );
     }
   }
-  
+
   shift(size: number): Float32Array {
     const result = new Float32Array(size);
     let resultIdx = 0;
@@ -172,7 +172,7 @@ class QueueCircularDataBuffer {
   }
 }
 
-// Slow 
+// Slow
 class Float32ArrayCircularDataBuffer {
   private buffer: Float32Array;
   private maxSize: number;
@@ -214,4 +214,5 @@ class Float32ArrayCircularDataBuffer {
   }
 }
 
+// export the best buffer implementation
 export default QueueCircularDataBuffer;

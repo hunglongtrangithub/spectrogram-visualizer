@@ -65,7 +65,9 @@ class ChannelBufferProcessor extends AudioWorkletProcessor {
       }
 
       // Merge all the buffers we have so far into a single buffer for rendering
-      const buffer = this.channelBuffers[channelIdx].shift(this.spectrogramBufferSize);
+      const buffer = this.channelBuffers[channelIdx].shift(
+        this.spectrogramBufferSize,
+      );
       buffers.push(buffer);
     }
 

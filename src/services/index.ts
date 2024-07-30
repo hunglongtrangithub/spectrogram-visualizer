@@ -365,6 +365,8 @@ export default class SpectrogramManager {
     };
   }
 
+  // NOTE: The following methods are deprecated and are not used in the app
+
   public async setupSpectrogramFromAudioFileDep(
     audioCtx: AudioContext,
     arrayBuffer: ArrayBuffer,
