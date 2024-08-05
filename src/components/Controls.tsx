@@ -72,8 +72,8 @@ export default function Controls({
   onRenderParametersUpdate: (settings: Partial<Parameters>) => void;
 }) {
   const { current: defaultParameters } = useRef({
-    windowSize: 4096,
-    overlap: 3072, // 4096 - 1024
+    windowSize: 4096, // 2^12 samples
+    overlap: 0.75, // step size = 1/4 of window size
     sensitivity: 0.5,
     contrast: 0.5,
     zoom: 1,
@@ -156,6 +156,8 @@ export default function Controls({
     setPlayState("stopped");
   }, [onStop, setPlayState]);
 
+  const [WindowSizeSlider, setWindowSize] = useMemo(generateLabelledSlider, []);
+  const [OverlapSlider, setOverlap] = useMemo(generateLabelledSlider, []);
   const [SensitivitySlider, setSensitivity] = useMemo(
     generateLabelledSlider,
     [],
@@ -171,9 +173,25 @@ export default function Controls({
     [],
   );
 
+  const onWindowSizeChange = useCallback(
+    (value: number) => {
+      const scaledValue = 2 ** value;
+      defaultParameters.windowSize = scaledValue;
+      onRenderParametersUpdate({ windowSize: scaledValue });
+      setWindowSize(`${scaledValue.toString()} = 2^${value.toString()}`);
+    },
+    [defaultParameters, onRenderParametersUpdate, setWindowSize],
+  );
+  const onOverlapChange = useCallback(
+    (value: number) => {
+      const scaledValue = defaultParameters.windowSize * (1 - value);
+      onRenderParametersUpdate({ windowStepSize: scaledValue });
+      setOverlap(formatPercentage(value));
+    },
+    [defaultParameters, onRenderParametersUpdate, setOverlap],
+  );
   const onSensitivityChange = useCallback(
     (value: number) => {
-      console.log("value", value);
       defaultParameters.sensitivity = value;
       const scaledValue = 10 ** (value * 3) - 1;
       onRenderParametersUpdate({ sensitivity: scaledValue });
@@ -242,7 +260,8 @@ export default function Controls({
 
   // Update all parameters on mount
   useEffect(() => {
-    console.log("defaultParameters", defaultParameters);
+    onWindowSizeChange(Math.log2(defaultParameters.windowSize));
+    onOverlapChange(defaultParameters.overlap);
     onSensitivityChange(defaultParameters.sensitivity);
     onContrastChange(defaultParameters.contrast);
     onZoomChange(defaultParameters.zoom);
@@ -317,6 +336,24 @@ export default function Controls({
 
       <StyledDivider />
 
+      <WindowSizeSlider
+        nameLabelId="window-size-slider-label"
+        nameLabel="Window size"
+        min={5}
+        max={15}
+        step={1}
+        defaultValue={Math.log2(defaultParameters.windowSize)}
+        onChange={onWindowSizeChange}
+      />
+      <OverlapSlider
+        nameLabelId="overlap-slider-label"
+        nameLabel="Overlap"
+        min={0}
+        max={1}
+        step={0.001}
+        defaultValue={defaultParameters.overlap}
+        onChange={onOverlapChange}
+      />
       <SensitivitySlider
         nameLabelId="sensitivity-slider-label"
         nameLabel="Sensitivity"

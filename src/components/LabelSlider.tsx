@@ -81,6 +81,7 @@ function generateLabelledSlider(): [LabelledSlider, (value: string) => void] {
         </SliderLabelContainer>
         <Slider
           aria-labelledby={nameLabelId}
+          size="small"
           step={step}
           min={min}
           max={max}
