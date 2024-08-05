@@ -22,6 +22,10 @@ interface SpectrogramBufferData {
   isStart: boolean;
 }
 
+export interface Parameters extends RenderParameters {
+  windowStepSize: number;
+}
+
 export class SpectrogramVisualizer {
   private canvas: HTMLCanvasElement;
   private renderer: SpectrogramGPURenderer;
@@ -213,7 +217,8 @@ export default class SpectrogramManager {
     });
   }
 
-  public updateRenderParameters(parameters: Partial<RenderParameters>): void {
+  public updateRenderParameters(parameters: Partial<Parameters>): void {
+    // TODO: update windowStepSize for manager
     this.visualizers.forEach((visualizer) => {
       visualizer.updateRenderParameters(parameters);
     });

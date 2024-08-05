@@ -37,7 +37,7 @@ import generateLabelledSlider from "./LabelSlider";
 import { GRADIENTS } from "../services/color-util";
 import { hzToMel, melToHz } from "../services/math-util";
 import { Scale } from "../services/spectrogram";
-import { RenderParameters } from "../services/spectrogram-render";
+import { Parameters } from "../services";
 import { PlayState } from "../App";
 
 const formatHz = (hz: number) => {
@@ -69,9 +69,11 @@ export default function Controls({
   onRenderFromFile: (file: ArrayBuffer) => void;
   onStop: () => void;
   onClearSpectrogram: () => void;
-  onRenderParametersUpdate: (settings: Partial<RenderParameters>) => void;
+  onRenderParametersUpdate: (settings: Partial<Parameters>) => void;
 }) {
   const { current: defaultParameters } = useRef({
+    windowSize: 4096,
+    overlap: 3072, // 4096 - 1024
     sensitivity: 0.5,
     contrast: 0.5,
     zoom: 1,
@@ -94,21 +96,6 @@ export default function Controls({
 
   const onInnerPaperClick = useCallback(
     (e: MouseEvent) => e.stopPropagation(),
-    [],
-  );
-
-  const [SensitivitySlider, setSensitivity] = useMemo(
-    generateLabelledSlider,
-    [],
-  );
-  const [ContrastSlider, setContrast] = useMemo(generateLabelledSlider, []);
-  const [ZoomSlider, setZoom] = useMemo(generateLabelledSlider, []);
-  const [MinFrequencySlider, setMinFrequency] = useMemo(
-    generateLabelledSlider,
-    [],
-  );
-  const [MaxFrequencySlider, setMaxFrequency] = useMemo(
-    generateLabelledSlider,
     [],
   );
 
@@ -169,8 +156,24 @@ export default function Controls({
     setPlayState("stopped");
   }, [onStop, setPlayState]);
 
+  const [SensitivitySlider, setSensitivity] = useMemo(
+    generateLabelledSlider,
+    [],
+  );
+  const [ContrastSlider, setContrast] = useMemo(generateLabelledSlider, []);
+  const [ZoomSlider, setZoom] = useMemo(generateLabelledSlider, []);
+  const [MinFrequencySlider, setMinFrequency] = useMemo(
+    generateLabelledSlider,
+    [],
+  );
+  const [MaxFrequencySlider, setMaxFrequency] = useMemo(
+    generateLabelledSlider,
+    [],
+  );
+
   const onSensitivityChange = useCallback(
     (value: number) => {
+      console.log("value", value);
       defaultParameters.sensitivity = value;
       const scaledValue = 10 ** (value * 3) - 1;
       onRenderParametersUpdate({ sensitivity: scaledValue });
@@ -239,6 +242,7 @@ export default function Controls({
 
   // Update all parameters on mount
   useEffect(() => {
+    console.log("defaultParameters", defaultParameters);
     onSensitivityChange(defaultParameters.sensitivity);
     onContrastChange(defaultParameters.contrast);
     onZoomChange(defaultParameters.zoom);
