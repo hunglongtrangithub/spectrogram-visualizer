@@ -54,6 +54,17 @@ const formatPercentage = (value: number) => {
   return `${(value * 100).toPrecision(3)}%`;
 };
 
+const defaultParameters = {
+  windowSize: 4096, // 2^12 samples
+  overlap: 0.75, // step size = 1/4 of window size
+  sensitivity: 0.5,
+  contrast: 0.5,
+  zoom: 1,
+  minFrequency: 10,
+  maxFrequency: 12000,
+  scale: "mel" as Scale,
+  gradient: "Heated Metal",
+}
 export default function Controls({
   playState,
   setPlayState,
@@ -71,17 +82,7 @@ export default function Controls({
   onClearSpectrogram: () => void;
   onRenderParametersUpdate: (settings: Partial<Parameters>) => void;
 }) {
-  const { current: defaultParameters } = useRef({
-    windowSize: 4096, // 2^12 samples
-    overlap: 0.75, // step size = 1/4 of window size
-    sensitivity: 0.5,
-    contrast: 0.5,
-    zoom: 1,
-    minFrequency: 10,
-    maxFrequency: 12000,
-    scale: "mel" as Scale,
-    gradient: "Heated Metal",
-  });
+  const renderParameters = useRef({ ...defaultParameters });
   const isMobile = useMediaQuery("(max-width: 800px)");
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -175,74 +176,86 @@ export default function Controls({
 
   const onWindowSizeChange = useCallback(
     (value: number) => {
-      const scaledValue = 2 ** value;
-      defaultParameters.windowSize = scaledValue;
-      onRenderParametersUpdate({ windowSize: scaledValue });
-      setWindowSize(`${scaledValue.toString()} = 2^${value.toString()}`);
+      const windowSize = 2 ** value;
+      renderParameters.current.windowSize = windowSize;
+      // step size needs to be recalculated when window size changes
+      const windowStepSize = windowSize * (1 - renderParameters.current.overlap);
+      onRenderParametersUpdate({ windowSize, windowStepSize });
+      setWindowSize(`${windowSize.toString()} = 2^${value.toString()} samples`);
     },
-    [defaultParameters, onRenderParametersUpdate, setWindowSize],
+    [onRenderParametersUpdate, setWindowSize],
   );
+
   const onOverlapChange = useCallback(
     (value: number) => {
-      const scaledValue = defaultParameters.windowSize * (1 - value);
-      onRenderParametersUpdate({ windowStepSize: scaledValue });
-      setOverlap(formatPercentage(value));
+      // step size needs to be recalculated when overlap changes
+      const windowStepSize = renderParameters.current.windowSize * (1 - value);
+      renderParameters.current.overlap = value;
+      onRenderParametersUpdate({ windowStepSize });
+      setOverlap(`${formatPercentage(value)} window size`);
     },
-    [defaultParameters, onRenderParametersUpdate, setOverlap],
+    [onRenderParametersUpdate, setOverlap],
   );
+
   const onSensitivityChange = useCallback(
     (value: number) => {
-      defaultParameters.sensitivity = value;
+      renderParameters.current.sensitivity = value;
       const scaledValue = 10 ** (value * 3) - 1;
       onRenderParametersUpdate({ sensitivity: scaledValue });
       setSensitivity(formatPercentage(value));
     },
-    [defaultParameters, onRenderParametersUpdate, setSensitivity],
+    [onRenderParametersUpdate, setSensitivity],
   );
+
   const onContrastChange = useCallback(
     (value: number) => {
-      defaultParameters.contrast = value;
+      renderParameters.current.contrast = value;
       const scaledValue = 10 ** (value * 6) - 1;
       onRenderParametersUpdate({ contrast: scaledValue });
       setContrast(formatPercentage(value));
     },
-    [defaultParameters, onRenderParametersUpdate, setContrast],
+    [onRenderParametersUpdate, setContrast],
   );
+
   const onZoomChange = useCallback(
     (value: number) => {
-      defaultParameters.zoom = value;
+      renderParameters.current.zoom = value;
       onRenderParametersUpdate({ zoom: value });
       setZoom(formatPercentage(value));
     },
-    [defaultParameters, onRenderParametersUpdate, setZoom],
+    [onRenderParametersUpdate, setZoom],
   );
+
   const onMinFreqChange = useCallback(
     (value: number) => {
       const hz = melToHz(value);
-      defaultParameters.minFrequency = hz;
+      renderParameters.current.minFrequency = hz;
       onRenderParametersUpdate({ minFrequencyHz: hz });
       setMinFrequency(formatHz(hz));
     },
-    [defaultParameters, onRenderParametersUpdate, setMinFrequency],
+    [onRenderParametersUpdate, setMinFrequency],
   );
+
   const onMaxFreqChange = useCallback(
     (value: number) => {
       const hz = melToHz(value);
-      defaultParameters.maxFrequency = hz;
+      renderParameters.current.maxFrequency = hz;
       onRenderParametersUpdate({ maxFrequencyHz: hz });
       setMaxFrequency(formatHz(hz));
     },
-    [defaultParameters, onRenderParametersUpdate, setMaxFrequency],
+    [onRenderParametersUpdate, setMaxFrequency],
   );
+
   const onScaleChange = useCallback(
     (event: SelectChangeEvent) => {
       if (typeof event.target.value === "string") {
-        defaultParameters.scale = event.target.value as Scale;
+        renderParameters.current.scale = event.target.value as Scale;
         onRenderParametersUpdate({ scale: event.target.value as Scale });
       }
     },
-    [defaultParameters, onRenderParametersUpdate],
+    [onRenderParametersUpdate],
   );
+
   const onGradientChange = useCallback(
     (event: SelectChangeEvent) => {
       if (typeof event.target.value === "string") {
@@ -250,15 +263,15 @@ export default function Controls({
           (g) => g.name === event.target.value,
         );
         if (gradientData !== undefined) {
-          defaultParameters.gradient = gradientData.name;
+          renderParameters.current.gradient = gradientData.name;
           onRenderParametersUpdate({ gradient: gradientData.gradient });
         }
       }
     },
-    [defaultParameters, onRenderParametersUpdate],
+    [onRenderParametersUpdate],
   );
 
-  // Update all parameters on mount
+  // Update all parameters on mount with default values
   useEffect(() => {
     onWindowSizeChange(Math.log2(defaultParameters.windowSize));
     onOverlapChange(defaultParameters.overlap);
