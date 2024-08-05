@@ -74,7 +74,7 @@ export default function Controls({
   const { current: defaultParameters } = useRef({
     sensitivity: 0.5,
     contrast: 0.5,
-    zoom: 4,
+    zoom: 1,
     minFrequency: 10,
     maxFrequency: 12000,
     scale: "mel" as Scale,
@@ -113,18 +113,42 @@ export default function Controls({
   );
 
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const [file, setFile] = useState<File | null>(null);
 
   const onPlayMicrophoneClick = useCallback(() => {
     setPlayState("loading-mic");
     onRenderFromMicrophone();
   }, [onRenderFromMicrophone, setPlayState]);
+
+  const readFile = useCallback((file: File) => {
+    const reader = new FileReader();
+    setPlayState("loading-file");
+
+    reader.addEventListener("load", () => {
+      if (reader.result instanceof ArrayBuffer) {
+        onRenderFromFile(reader.result);
+      } else {
+        setPlayState("stopped");
+      }
+    });
+    reader.readAsArrayBuffer(file);
+  }, [onRenderFromFile, setPlayState]);
   const onPlayFileClick = useCallback(() => {
     if (fileRef.current === null) {
       return;
     }
+    if (file !== null) {
+      readFile(file);
+      return;
+    }
     fileRef.current.click();
+  }, [fileRef, file, readFile]);
+  const onClearFile = useCallback(() => {
+    if (fileRef.current !== null) {
+      fileRef.current.value = "";
+    }
+    setFile(null);
   }, [fileRef]);
-
   const onFileChange = useCallback(() => {
     if (
       fileRef.current === null ||
@@ -135,22 +159,10 @@ export default function Controls({
     }
 
     const file = fileRef.current.files[0];
-    const reader = new FileReader();
-    setPlayState("loading-file");
+    setFile(file);
 
-    reader.addEventListener("load", () => {
-      if (fileRef.current !== null) {
-        fileRef.current.value = "";
-      }
-
-      if (reader.result instanceof ArrayBuffer) {
-        onRenderFromFile(reader.result);
-      } else {
-        setPlayState("stopped");
-      }
-    });
-    reader.readAsArrayBuffer(file);
-  }, [fileRef, setPlayState, onRenderFromFile]);
+    readFile(file);
+  }, [fileRef, readFile]);
 
   const onStopClick = useCallback(() => {
     onStop();
@@ -277,7 +289,17 @@ export default function Controls({
         </Button>
         {playState === "loading-file" && <ButtonProgress size={24} />}
       </ButtonContainer>
-
+      <Typography variant="subtitle1">Current file: {file?.name}</Typography>
+      <Button
+        fullWidth
+        variant="outlined"
+        color="primary"
+        onClick={onClearFile}
+        startIcon={<ClearIcon />}
+        disabled={file === null}
+      >
+        Clear file
+      </Button>
       <LastButton
         fullWidth
         variant="outlined"
