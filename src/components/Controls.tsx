@@ -275,19 +275,19 @@ export default function Controls({
     [onRenderParametersUpdate],
   );
 
-  // Update all parameters on mount with default values
+  // Update all parameters on mount with current values
   useEffect(() => {
-    onWindowSizeChange(Math.log2(defaultParameters.windowSize));
-    onOverlapChange(defaultParameters.overlap);
-    onSensitivityChange(defaultParameters.sensitivity);
-    onContrastChange(defaultParameters.contrast);
-    onZoomChange(defaultParameters.zoom);
-    onMinFreqChange(hzToMel(defaultParameters.minFrequency));
-    onMaxFreqChange(hzToMel(defaultParameters.maxFrequency));
-    onRenderParametersUpdate({ scale: defaultParameters.scale });
+    onWindowSizeChange(Math.log2(renderParameters.current.windowSize));
+    onOverlapChange(renderParameters.current.overlap);
+    onSensitivityChange(renderParameters.current.sensitivity);
+    onContrastChange(renderParameters.current.contrast);
+    onZoomChange(renderParameters.current.zoom);
+    onMinFreqChange(hzToMel(renderParameters.current.minFrequency));
+    onMaxFreqChange(hzToMel(renderParameters.current.maxFrequency));
+    onRenderParametersUpdate({ scale: renderParameters.current.scale });
 
     const gradientData = GRADIENTS.find(
-      (g) => g.name === defaultParameters.gradient,
+      (g) => g.name === renderParameters.current.gradient,
     );
     if (gradientData !== undefined) {
       onRenderParametersUpdate({ gradient: gradientData.gradient });
@@ -359,7 +359,7 @@ export default function Controls({
         min={5}
         max={15}
         step={1}
-        defaultValue={Math.log2(defaultParameters.windowSize)}
+        defaultValue={Math.log2(renderParameters.current.windowSize)}
         onChange={onWindowSizeChange}
       />
       <OverlapSlider
@@ -368,7 +368,7 @@ export default function Controls({
         min={0}
         max={1}
         step={0.001}
-        defaultValue={defaultParameters.overlap}
+        defaultValue={renderParameters.current.overlap}
         onChange={onOverlapChange}
       />
       <SensitivitySlider
@@ -377,7 +377,7 @@ export default function Controls({
         min={0}
         max={1}
         step={0.001}
-        defaultValue={defaultParameters.sensitivity}
+        defaultValue={renderParameters.current.sensitivity}
         onChange={onSensitivityChange}
       />
       <ContrastSlider
@@ -386,7 +386,7 @@ export default function Controls({
         min={0}
         max={1}
         step={0.001}
-        defaultValue={defaultParameters.contrast}
+        defaultValue={renderParameters.current.contrast}
         onChange={onContrastChange}
       />
       <ZoomSlider
@@ -395,7 +395,7 @@ export default function Controls({
         min={1}
         max={10}
         step={0.01}
-        defaultValue={defaultParameters.zoom}
+        defaultValue={renderParameters.current.zoom}
         onChange={onZoomChange}
       />
       <MinFrequencySlider
@@ -404,7 +404,7 @@ export default function Controls({
         min={hzToMel(0)}
         max={hzToMel(20000)}
         step={1}
-        defaultValue={hzToMel(defaultParameters.minFrequency)}
+        defaultValue={hzToMel(renderParameters.current.minFrequency)}
         onChange={onMinFreqChange}
       />
       <MaxFrequencySlider
@@ -413,7 +413,7 @@ export default function Controls({
         min={hzToMel(0)}
         max={hzToMel(20000)}
         step={1}
-        defaultValue={hzToMel(defaultParameters.maxFrequency)}
+        defaultValue={hzToMel(renderParameters.current.maxFrequency)}
         onChange={onMaxFreqChange}
       />
       <StyledSelect>
@@ -421,7 +421,7 @@ export default function Controls({
         <Select
           labelId="scale-select-label"
           id="scale-select"
-          defaultValue={defaultParameters.scale}
+          defaultValue={renderParameters.current.scale}
           onChange={onScaleChange}
         >
           <MenuItem value="mel">Mel</MenuItem>
@@ -433,7 +433,7 @@ export default function Controls({
         <Select
           labelId="gradient-select-label"
           id="gradient-select"
-          defaultValue={defaultParameters.gradient}
+          defaultValue={renderParameters.current.gradient}
           onChange={onGradientChange}
         >
           {GRADIENTS.map((g) => (
