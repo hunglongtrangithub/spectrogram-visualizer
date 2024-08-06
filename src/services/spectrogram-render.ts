@@ -1,5 +1,5 @@
 import { colorRamp, Gradient, HEATED_METAL_GRADIENT } from "./color-util";
-import { TypedArray, lerp, mod } from "./math-util";
+import { TypedArray, lerp, mod, hzToMel, melToHz, nyquistFrequency } from "./math-util";
 import FragmentShaderSrc from "./shaders/fragment.glsl";
 import VertexShaderSrc from "./shaders/vertex.glsl";
 import { Scale } from "./spectrogram";
@@ -26,7 +26,7 @@ export class Circular2DDataBuffer<T extends TypedArray> {
 
   constructor(
     // Either the TypedArray constructor or an existing TypedArray instance
-    TypedArrayConstructorOrData: T | { new (length: number): T },
+    TypedArrayConstructorOrData: T | { new(length: number): T },
     // Number of columns in the buffer
     numColumns: number,
     // Number of rows in the buffer
@@ -782,15 +782,15 @@ export class SpectrogramGPURenderer {
     sampleRate: number,
     windowSize: number,
   ) {
-    const peakHz = (sampleRate * (windowSize - 2)) / (2 * windowSize);
+    const peakHz = nyquistFrequency(sampleRate, windowSize);
     switch (scale) {
       case "linear":
         this.scaleRange = [minFrequencyHz / peakHz, maxFrequencyHz / peakHz];
         break;
       case "mel":
         this.scaleRange = [
-          Math.log(1 + minFrequencyHz / 700) / Math.log(1 + peakHz / 700),
-          Math.log(1 + maxFrequencyHz / 700) / Math.log(1 + peakHz / 700),
+          hzToMel(minFrequencyHz) / hzToMel(peakHz),
+          hzToMel(maxFrequencyHz) / hzToMel(peakHz),
         ];
         break;
       default:
@@ -805,16 +805,14 @@ export class SpectrogramGPURenderer {
   ) {
     const buffer = new Float32Array(this.spectrogramHeight);
     for (let i = 0; i < this.spectrogramHeight; i += 1) {
+      const scaleAmount = i / (this.spectrogramHeight - 1);
       switch (scale) {
         case "linear":
-          buffer[i] = i / (this.spectrogramHeight - 1);
+          buffer[i] = scaleAmount;
           break;
         case "mel": {
-          const peakHz = (sampleRate * (windowSize - 2)) / (2 * windowSize);
-          buffer[i] =
-            (700 *
-              ((1 + peakHz / 700) ** (i / (this.spectrogramHeight - 1)) - 1)) /
-            peakHz;
+          const peakHz = nyquistFrequency(sampleRate, windowSize);
+          buffer[i] = melToHz(scaleAmount * hzToMel(peakHz)) / peakHz;
           break;
         }
         default:

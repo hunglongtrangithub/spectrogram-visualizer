@@ -6,6 +6,7 @@ import {
   inverseLerp,
   lerp,
   melToHz,
+  nyquistFrequency,
 } from "./math-util";
 
 export type Scale = "linear" | "mel";
@@ -31,6 +32,7 @@ export interface SpectrogramResult {
 }
 
 // Helper function to calculate the spectrogram for a single frame
+// When minFrequencyHz > maxFrequencyHz, the resultBuffer will be filled in the reverse order: larger index -> lower frequency
 function generateSpectrogramForSingleFrame(
   windowSamples: Float32Array,
   resultBuffer: Float32Array,
@@ -49,11 +51,11 @@ function generateSpectrogramForSingleFrame(
   const fft = FFT(windowSamples);
   for (let j = 0; j < scaleSize; j += 1) {
     const scaleAmount = inverseLerp(0, scaleSize - 1, j);
-    let n;
+    let freqIdx; // The estimated index of the frequency in the FFT result
     switch (scale) {
       case "linear": {
         const hz = lerp(minFrequencyHz, maxFrequencyHz, scaleAmount);
-        n = (hz * windowSamples.length) / sampleRate;
+        freqIdx = (hz * windowSamples.length) / sampleRate;
         break;
       }
       case "mel": {
@@ -62,22 +64,22 @@ function generateSpectrogramForSingleFrame(
           hzToMel(maxFrequencyHz),
           scaleAmount,
         );
-        n = (melToHz(mel) * windowSamples.length) / sampleRate;
+        freqIdx = (melToHz(mel) * windowSamples.length) / sampleRate;
         break;
       }
       default:
         throw new Error("Unknown scale");
     }
 
-    const lowerN = Math.floor(n);
-    const upperN = Math.ceil(n);
+    const lowerFreqIdx = Math.floor(freqIdx);
+    const upperFreqIdx = Math.ceil(freqIdx);
 
     const amplitude =
       lerp(
-        Math.sqrt(fft.real[lowerN] ** 2 + fft.imag[lowerN] ** 2),
-        Math.sqrt(fft.real[upperN] ** 2 + fft.imag[upperN] ** 2),
-        n - lowerN,
-      ) / Math.sqrt(windowSamples.length);
+        Math.sqrt(fft.real[lowerFreqIdx] ** 2 + fft.imag[lowerFreqIdx] ** 2),
+        Math.sqrt(fft.real[upperFreqIdx] ** 2 + fft.imag[upperFreqIdx] ** 2),
+        freqIdx - lowerFreqIdx,
+      ) / Math.sqrt(windowSamples.length); // NOTE: Why divide by the window size?
 
     resultBuffer[resultBufferIndex + j] = amplitude;
   }
@@ -107,7 +109,7 @@ export function generateSpectrogram(
     minFrequencyHz = 0;
   }
   if (maxFrequencyHz === undefined) {
-    maxFrequencyHz = (sampleRate * (windowSize - 2)) / (2 * windowSize);
+    maxFrequencyHz = nyquistFrequency(sampleRate, windowSize);
   }
   if (scaleSize === undefined) {
     scaleSize = windowSize / 2;

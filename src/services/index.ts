@@ -340,6 +340,10 @@ export default class SpectrogramManager {
     processorNode.port.onmessage = async (
       event: MessageEvent<Required<ProcessBuffersMessage>>,
     ) => {
+      if (event.data.error) {
+        console.error(`Error: ${event.data.error}`);
+        return;
+      }
       const { processedBuffers, sampleRate, isStart } = event.data.payload;
       if (processedBuffers.length > 0) {
         console.log(`Processing ${processedBuffers[0].length} samples`);

@@ -51,3 +51,8 @@ export function blackmanHarris(n: number, samples: number): number {
   }
   return result;
 }
+
+// NOTE: This function intentionally make the Nyquist frequency slightly less than the "actual Nyquist frequency" (the on that accounts for when windowSize is either even or odd). Really pedantic, may not be necessary.
+export function nyquistFrequency(sampleRate: number, windowSize: number): number {
+  return ((windowSize - 2) * sampleRate) / (2 * windowSize); // (1/2 - 1/windowSize) * sampleRate
+}

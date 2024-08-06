@@ -126,7 +126,6 @@ function App() {
       if (!spectrogramManager) {
         return;
       }
-      console.log("Updating render parameters with", settings);
       try {
         spectrogramManager.updateRenderParameters(settings);
       } catch (e) {
