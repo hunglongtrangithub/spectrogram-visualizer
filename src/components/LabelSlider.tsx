@@ -10,6 +10,7 @@ export interface LabelledSliderProps {
   min: number;
   max: number;
   step?: number;
+  disabled?: boolean;
   defaultValue: number;
   onChange: (value: number) => void;
 }
@@ -52,6 +53,7 @@ function generateLabelledSlider(): [LabelledSlider, (value: string) => void] {
     min,
     max,
     step = 1,
+    disabled = false,
     defaultValue,
     onChange,
   }: LabelledSliderProps) => {
@@ -85,6 +87,7 @@ function generateLabelledSlider(): [LabelledSlider, (value: string) => void] {
           step={step}
           min={min}
           max={max}
+          disabled={disabled}
           defaultValue={defaultValue}
           onChange={changeCallback}
         />

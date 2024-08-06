@@ -33,7 +33,7 @@ export interface ManagerParameters extends VisualizerParameters {
 export class SpectrogramVisualizer {
   private canvas: HTMLCanvasElement;
   private renderer: SpectrogramGPURenderer;
-  private spectrogramBuffer: Circular2DDataBuffer<Float32Array>;
+  private readonly spectrogramBuffer: Circular2DDataBuffer<Float32Array>;
   private readonly spectrogramScaleSize: number;
   private spectrogramWindowSize: number;
   private spectrogramWindowStepSize: number;
@@ -94,18 +94,22 @@ export class SpectrogramVisualizer {
       windowSize: this.spectrogramWindowSize,
       sampleRate: bufferData.sampleRate,
     });
+    const spectrogramOptions = {
+      windowSize: this.spectrogramWindowSize,
+      windowStepSize: this.spectrogramWindowStepSize,
+      scaleSize: this.spectrogramScaleSize,
+      sampleRate: bufferData.sampleRate,
+      isStart: bufferData.isStart,
+    };
+    console.log(
+      `Spectrogram options: ${JSON.stringify(spectrogramOptions)}. Buffer length: ${bufferData.length}`,
+    );
     try {
       const spectrogram = await offThreadGenerateSpectrogram(
         bufferData.buffer,
         bufferData.start,
         bufferData.length,
-        {
-          windowSize: this.spectrogramWindowSize,
-          windowStepSize: this.spectrogramWindowStepSize,
-          scaleSize: this.spectrogramScaleSize,
-          sampleRate: bufferData.sampleRate,
-          isStart: bufferData.isStart,
-        },
+        spectrogramOptions,
       );
       this.spectrogramBuffer.enqueue(spectrogram.spectrogramData);
       this.imageDirty = true;
@@ -129,6 +133,8 @@ export class SpectrogramVisualizer {
     const { windowStepSize, ...renderParameters } = parameters;
     this.spectrogramWindowStepSize =
       windowStepSize || this.spectrogramWindowStepSize;
+    this.spectrogramWindowSize =
+      renderParameters.windowSize || this.spectrogramWindowSize;
     this.renderer.updateParameters(renderParameters);
   }
 
@@ -282,7 +288,6 @@ export default class SpectrogramManager {
     ) => {
       const { processedBuffers, sampleRate, isStart } = event.data.payload;
       if (processedBuffers.length > 0) {
-        console.log(`Processing ${processedBuffers[0].length} samples`);
         await Promise.all(
           processedBuffers.map((buffer, i) =>
             this.visualizers[i].updateSpectrogramBuffer({
@@ -362,7 +367,6 @@ export default class SpectrogramManager {
       }
       const { processedBuffers, sampleRate, isStart } = event.data.payload;
       if (processedBuffers.length > 0) {
-        console.log(`Processing ${processedBuffers[0].length} samples`);
         await Promise.all(
           processedBuffers.map((buffer, i) =>
             this.visualizers[i].updateSpectrogramBuffer({

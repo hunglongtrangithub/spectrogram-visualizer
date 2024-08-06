@@ -89,6 +89,7 @@ function generateSpectrogramForSingleFrame(
 // NOTE: when isStart or isEnd are false:
 // if samplesLength <= windowSize - windowStepSize, numWindows <= 0
 // if windowSize - windowStepSize < samplesLength <= windowSize, numWindows = 1
+// Make sure that samplesLength is larger than windowSize - windowStepSize, otherwise the function won't render any window
 export function generateSpectrogram(
   samples: Float32Array, // The whole audio samples
   samplesStart: number, // The start index in the audio samples to calculate the spectrogram for

@@ -10,6 +10,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import MicIcon from "@mui/icons-material/Mic";
 import SettingsIcon from "@mui/icons-material/Settings";
 import StopIcon from "@mui/icons-material/Stop";
+import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 
 import React, {
   MouseEvent,
@@ -55,6 +57,7 @@ const formatPercentage = (value: number) => {
 };
 
 const defaultParameters = {
+  bufferSize: 4096,
   windowSize: 4096, // 2^12 samples
   overlap: 0.75, // step size = 1/4 of window size
   sensitivity: 0.5,
@@ -160,6 +163,7 @@ export default function Controls({
     setPlayState("stopped");
   }, [onStop, setPlayState]);
 
+  const [BufferSizeSlider, setBufferSize] = useMemo(generateLabelledSlider, []);
   const [WindowSizeSlider, setWindowSize] = useMemo(generateLabelledSlider, []);
   const [OverlapSlider, setOverlap] = useMemo(generateLabelledSlider, []);
   const [SensitivitySlider, setSensitivity] = useMemo(
@@ -177,9 +181,24 @@ export default function Controls({
     [],
   );
 
+  const onBufferSizeChange = useCallback(
+    (value: number) => {
+      renderParameters.current.bufferSize = 2 ** value;
+      onRenderParametersUpdate({ bufferSize: 2 ** value });
+      setBufferSize(`${2 ** value} = 2^${value.toString()} samples`);
+    },
+    [onRenderParametersUpdate, setBufferSize],
+  );
+
   const onWindowSizeChange = useCallback(
     (value: number) => {
       const windowSize = 2 ** value;
+      if (windowSize > renderParameters.current.bufferSize) {
+        toast.error(
+          "Window size cannot be greater than buffer size. Stop the audio and increase buffer size first.",
+        );
+        return;
+      }
       renderParameters.current.windowSize = windowSize;
       // step size needs to be recalculated when window size changes
       const windowStepSize =
@@ -193,7 +212,9 @@ export default function Controls({
   const onOverlapChange = useCallback(
     (value: number) => {
       // step size needs to be recalculated when overlap changes
-      const windowStepSize = renderParameters.current.windowSize * (1 - value);
+      const windowStepSize = Math.floor(
+        renderParameters.current.windowSize * (1 - value),
+      );
       renderParameters.current.overlap = value;
       onRenderParametersUpdate({ windowStepSize });
       setOverlap(`${formatPercentage(value)} window size`);
@@ -277,6 +298,7 @@ export default function Controls({
 
   // Update all parameters on mount with current values
   useEffect(() => {
+    onBufferSizeChange(Math.log2(renderParameters.current.bufferSize));
     onWindowSizeChange(Math.log2(renderParameters.current.windowSize));
     onOverlapChange(renderParameters.current.overlap);
     onSensitivityChange(renderParameters.current.sensitivity);
@@ -353,6 +375,16 @@ export default function Controls({
 
       <StyledDivider />
 
+      <BufferSizeSlider
+        nameLabelId="buffer-size-slider-label"
+        nameLabel="Buffer size"
+        min={5}
+        max={15}
+        step={1}
+        disabled={playState !== "stopped"}
+        defaultValue={Math.log2(renderParameters.current.bufferSize)}
+        onChange={onBufferSizeChange}
+      />
       <WindowSizeSlider
         nameLabelId="window-size-slider-label"
         nameLabel="Window size"
