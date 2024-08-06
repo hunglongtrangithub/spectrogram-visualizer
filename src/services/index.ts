@@ -22,8 +22,12 @@ interface SpectrogramBufferData {
   isStart: boolean;
 }
 
-export interface Parameters extends RenderParameters {
+export interface VisualizerParameters extends RenderParameters {
   windowStepSize: number;
+}
+
+export interface ManagerParameters extends VisualizerParameters {
+  bufferSize: number;
 }
 
 export class SpectrogramVisualizer {
@@ -31,8 +35,8 @@ export class SpectrogramVisualizer {
   private renderer: SpectrogramGPURenderer;
   private spectrogramBuffer: Circular2DDataBuffer<Float32Array>;
   private readonly spectrogramScaleSize: number;
-  private readonly spectrogramWindowSize: number;
-  private readonly spectrogramWindowStepSize: number;
+  private spectrogramWindowSize: number;
+  private spectrogramWindowStepSize: number;
   private imageDirty: boolean = false;
 
   constructor(
@@ -119,8 +123,13 @@ export class SpectrogramVisualizer {
     this.renderer.updateSpectrogram(this.spectrogramBuffer, true);
   }
 
-  public updateRenderParameters(parameters: Partial<RenderParameters>): void {
-    this.renderer.updateParameters(parameters);
+  public updateRenderParameters(
+    parameters: Partial<VisualizerParameters>,
+  ): void {
+    const { windowStepSize, ...renderParameters } = parameters;
+    this.spectrogramWindowStepSize =
+      windowStepSize || this.spectrogramWindowStepSize;
+    this.renderer.updateParameters(renderParameters);
   }
 
   public resize(): void {
@@ -147,9 +156,7 @@ export class SpectrogramVisualizer {
 export default class SpectrogramManager {
   private readonly visualizers: SpectrogramVisualizer[] = [];
   private readonly numberOfChannels: number;
-  private readonly spectrogramScaleSize: number;
-  private readonly spectrogramWindowSize: number;
-  private readonly spectrogramWindowStepSize: number;
+  private bufferSize: number;
   private stopCallback: (() => void) | null = null;
 
   constructor(
@@ -157,26 +164,34 @@ export default class SpectrogramManager {
     spectrogramWindowSize: number = SPECTROGRAM_WINDOW_SIZE,
     spectrogramWindowStepSize: number = SPECTROGRAM_WINDOW_STEPSIZE,
     spectrogramScaleSize?: number,
+    managerBufferSize?: number,
   ) {
-    this.initializeVisualizers(canvases);
     this.numberOfChannels = this.visualizers.length;
-    this.spectrogramWindowSize = spectrogramWindowSize;
-    this.spectrogramWindowStepSize = spectrogramWindowStepSize;
-    this.spectrogramScaleSize =
-      spectrogramScaleSize || spectrogramWindowSize / 2; // Nyquist frequency
+    this.bufferSize = managerBufferSize || spectrogramWindowSize;
+    this.initializeVisualizers(
+      canvases,
+      spectrogramWindowSize,
+      spectrogramWindowStepSize,
+      spectrogramScaleSize || spectrogramWindowSize / 2,
+    );
     console.log(`Number of visualizers: ${this.numberOfChannels}`);
   }
 
-  private initializeVisualizers(canvases: (HTMLCanvasElement | null)[]): void {
+  private initializeVisualizers(
+    canvases: (HTMLCanvasElement | null)[],
+    windowSize: number,
+    windowStepSize: number,
+    scaleSize: number,
+  ): void {
     canvases.forEach((canvas) => {
       if (canvas !== null && canvas.parentElement !== null) {
         try {
           this.visualizers.push(
             new SpectrogramVisualizer(
               canvas,
-              this.spectrogramWindowSize,
-              this.spectrogramWindowStepSize,
-              this.spectrogramScaleSize,
+              windowSize,
+              windowStepSize,
+              scaleSize,
             ),
           );
         } catch (e) {
@@ -217,10 +232,11 @@ export default class SpectrogramManager {
     });
   }
 
-  public updateRenderParameters(parameters: Partial<Parameters>): void {
-    // TODO: update windowStepSize for manager
+  public updateRenderParameters(parameters: Partial<ManagerParameters>): void {
+    const { bufferSize, ...visualizerParameters } = parameters;
+    this.bufferSize = bufferSize || this.bufferSize;
     this.visualizers.forEach((visualizer) => {
-      visualizer.updateRenderParameters(parameters);
+      visualizer.updateRenderParameters(visualizerParameters);
     });
   }
 
@@ -255,7 +271,7 @@ export default class SpectrogramManager {
       {
         processorOptions: {
           numberOfChannels: numberOfActualChannels,
-          spectrogramBufferSize: this.spectrogramWindowSize,
+          spectrogramBufferSize: this.bufferSize,
         },
       },
     );
@@ -331,7 +347,7 @@ export default class SpectrogramManager {
       {
         processorOptions: {
           numberOfChannels: numberOfActualChannels,
-          spectrogramBufferSize: this.spectrogramWindowSize,
+          spectrogramBufferSize: this.bufferSize,
         },
       },
     );

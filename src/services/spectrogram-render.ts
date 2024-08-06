@@ -1,5 +1,12 @@
 import { colorRamp, Gradient, HEATED_METAL_GRADIENT } from "./color-util";
-import { TypedArray, lerp, mod, hzToMel, melToHz, nyquistFrequency } from "./math-util";
+import {
+  TypedArray,
+  lerp,
+  mod,
+  hzToMel,
+  melToHz,
+  nyquistFrequency,
+} from "./math-util";
 import FragmentShaderSrc from "./shaders/fragment.glsl";
 import VertexShaderSrc from "./shaders/vertex.glsl";
 import { Scale } from "./spectrogram";
@@ -26,7 +33,7 @@ export class Circular2DDataBuffer<T extends TypedArray> {
 
   constructor(
     // Either the TypedArray constructor or an existing TypedArray instance
-    TypedArrayConstructorOrData: T | { new(length: number): T },
+    TypedArrayConstructorOrData: T | { new (length: number): T },
     // Number of columns in the buffer
     numColumns: number,
     // Number of rows in the buffer

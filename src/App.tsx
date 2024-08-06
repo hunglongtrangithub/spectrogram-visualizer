@@ -9,7 +9,7 @@ import { useCallback, useState, useRef, useEffect } from "react";
 
 import SpectrogramManager from "./services";
 import Controls from "./components/Controls";
-import { Parameters } from "./services";
+import { ManagerParameters } from "./services";
 
 export type PlayState = "stopped" | "loading-file" | "loading-mic" | "playing";
 
@@ -122,7 +122,7 @@ function App() {
   }, [spectrogramManager]);
 
   const onRenderParametersUpdate = useCallback(
-    (settings: Partial<Parameters>) => {
+    (settings: Partial<ManagerParameters>) => {
       if (!spectrogramManager) {
         return;
       }

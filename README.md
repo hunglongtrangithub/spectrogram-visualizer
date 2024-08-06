@@ -15,4 +15,5 @@ Real-time audio spectrogram visualizer using Web Audio API and Canvas API. This 
 3. Run `bun run dev` to start the development server
 
 ## TODO
+
 Make the window size and hop size adjustable from the UI

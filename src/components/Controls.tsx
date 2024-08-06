@@ -37,7 +37,7 @@ import generateLabelledSlider from "./LabelSlider";
 import { GRADIENTS } from "../services/color-util";
 import { hzToMel, melToHz } from "../services/math-util";
 import { Scale } from "../services/spectrogram";
-import { Parameters } from "../services";
+import { ManagerParameters } from "../services";
 import { PlayState } from "../App";
 
 const formatHz = (hz: number) => {
@@ -64,7 +64,7 @@ const defaultParameters = {
   maxFrequency: 12000,
   scale: "mel" as Scale,
   gradient: "Heated Metal",
-}
+};
 export default function Controls({
   playState,
   setPlayState,
@@ -80,7 +80,7 @@ export default function Controls({
   onRenderFromFile: (file: ArrayBuffer) => void;
   onStop: () => void;
   onClearSpectrogram: () => void;
-  onRenderParametersUpdate: (settings: Partial<Parameters>) => void;
+  onRenderParametersUpdate: (settings: Partial<ManagerParameters>) => void;
 }) {
   const renderParameters = useRef({ ...defaultParameters });
   const isMobile = useMediaQuery("(max-width: 800px)");
@@ -108,19 +108,22 @@ export default function Controls({
     onRenderFromMicrophone();
   }, [onRenderFromMicrophone, setPlayState]);
 
-  const readFile = useCallback((file: File) => {
-    const reader = new FileReader();
-    setPlayState("loading-file");
+  const readFile = useCallback(
+    (file: File) => {
+      const reader = new FileReader();
+      setPlayState("loading-file");
 
-    reader.addEventListener("load", () => {
-      if (reader.result instanceof ArrayBuffer) {
-        onRenderFromFile(reader.result);
-      } else {
-        setPlayState("stopped");
-      }
-    });
-    reader.readAsArrayBuffer(file);
-  }, [onRenderFromFile, setPlayState]);
+      reader.addEventListener("load", () => {
+        if (reader.result instanceof ArrayBuffer) {
+          onRenderFromFile(reader.result);
+        } else {
+          setPlayState("stopped");
+        }
+      });
+      reader.readAsArrayBuffer(file);
+    },
+    [onRenderFromFile, setPlayState],
+  );
   const onPlayFileClick = useCallback(() => {
     if (fileRef.current === null) {
       return;
@@ -179,7 +182,8 @@ export default function Controls({
       const windowSize = 2 ** value;
       renderParameters.current.windowSize = windowSize;
       // step size needs to be recalculated when window size changes
-      const windowStepSize = windowSize * (1 - renderParameters.current.overlap);
+      const windowStepSize =
+        windowSize * (1 - renderParameters.current.overlap);
       onRenderParametersUpdate({ windowSize, windowStepSize });
       setWindowSize(`${windowSize.toString()} = 2^${value.toString()} samples`);
     },
