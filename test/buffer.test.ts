@@ -6,7 +6,9 @@ describe("Circular2DDataBuffer", () => {
     const buffer = new Circular2DDataBuffer(Uint32Array, 100, 100, 1);
     for (let i = 0; i < buffer.numColumns; i++) {
       buffer.enqueue(
-        Uint32Array.from(Array.from({ length: buffer.numRows }, (_, j) => i + j)),
+        Uint32Array.from(
+          Array.from({ length: buffer.numRows }, (_, j) => i + j),
+        ),
       );
     }
     buffer.display();
@@ -16,7 +18,9 @@ describe("Circular2DDataBuffer", () => {
     const buffer = new Circular2DDataBuffer(Uint32Array, 3, 2, 1);
     for (let i = 0; i < buffer.numColumns; i++) {
       buffer.enqueue(
-        Uint32Array.from(Array.from({ length: buffer.numRows }, (_, j) => i + j)),
+        Uint32Array.from(
+          Array.from({ length: buffer.numRows }, (_, j) => i + j),
+        ),
       );
     }
     buffer.enqueue(Uint32Array.from([0, 0]));

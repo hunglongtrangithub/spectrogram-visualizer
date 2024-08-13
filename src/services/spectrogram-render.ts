@@ -33,7 +33,7 @@ export class Circular2DDataBuffer<T extends TypedArray> {
 
   constructor(
     // Either the TypedArray constructor or an existing TypedArray instance
-    TypedArrayConstructorOrData: T | { new(length: number): T },
+    TypedArrayConstructorOrData: T | { new (length: number): T },
     // Number of columns in the buffer
     numColumns: number,
     // Number of rows in the buffer
@@ -198,7 +198,7 @@ export class Circular2DDataBuffer<T extends TypedArray> {
     for (let j = 0; j < showEndColumns; j++) {
       const index =
         mod(this.startIndex + totalColumns - showEndColumns + j, totalColumns) *
-        this.numRows +
+          this.numRows +
         rowIdx;
       row += this.formatValue(this.bufferData[index]) + "\t";
     }

@@ -116,6 +116,7 @@ spectrogram.spectrogramData height and width: ${this.spectrogramScaleSize} x ${s
 bufferData.length: ${bufferData.length}
 spectrogramBuffer.numRows: ${this.spectrogramBuffer.numRows}
 spectrogramBuffer.currentLength: ${this.spectrogramBuffer.currentLength}
+spectrogram.windowCount: ${spectrogram.windowCount}
 `);
 
       return spectrogram.input;
