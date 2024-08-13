@@ -22,13 +22,13 @@ body {
   margin: 0;
   padding: 0;
   height: 100vh;
-  /* font-family: 'Roboto', sans-serif; */
   overflow-y: hidden;
 }
 
 .spectrograms {
   position: relative;
   flex: 1 1 0;
+  height: 100%;
 }
 
 .spectrograms .spectrogram {
@@ -92,6 +92,8 @@ body {
   flex: 0 0 auto;
   overflow-x: hidden;
   overflow-y: auto;
+  height: 100%;
+  max-height: 100%;
 }
 
 @media (max-width: 800px) {
