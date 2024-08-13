@@ -10,11 +10,11 @@ import CloseIcon from "@mui/icons-material/Close";
 import MicIcon from "@mui/icons-material/Mic";
 import SettingsIcon from "@mui/icons-material/Settings";
 import StopIcon from "@mui/icons-material/Stop";
-import "react-toastify/dist/ReactToastify.css";
+import Drawer from "@mui/material/Drawer";
 import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import React, {
-  MouseEvent,
   useState,
   useEffect,
   useMemo,
@@ -36,11 +36,10 @@ import {
 import generateLabelledSlider from "./LabelSlider";
 
 import { GRADIENTS } from "../services/color-util";
-import { hzToMel, melToHz } from "../services/math-util";
+import { hzToMel, melToHz, getNumWindows } from "../services/math-util";
 import { Scale } from "../services/spectrogram";
 import { ManagerParameters } from "../services";
 import { PlayState } from "../App";
-import { Drawer, SwipeableDrawer } from "@mui/material";
 
 const formatHz = (hz: number) => {
   if (hz < 999.5) {
@@ -59,7 +58,7 @@ const formatPercentage = (value: number) => {
 const defaultParameters = {
   bufferSize: 4096,
   windowSize: 4096, // 2^12 samples
-  overlap: 0.75, // step size = 1/4 of window size
+  stepSize: 0.25, // 1/4 of window size
   sensitivity: 0.5,
   contrast: 0.5,
   zoom: 1,
@@ -100,6 +99,7 @@ export default function Controls({
 
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [numWindows, setNumWindows] = useState(0);
 
   const onPlayMicrophoneClick = useCallback(() => {
     setPlayState("loading-mic");
@@ -160,7 +160,7 @@ export default function Controls({
 
   const [BufferSizeSlider, setBufferSize] = useMemo(generateLabelledSlider, []);
   const [WindowSizeSlider, setWindowSize] = useMemo(generateLabelledSlider, []);
-  const [OverlapSlider, setOverlap] = useMemo(generateLabelledSlider, []);
+  const [StepSizeSlider, setStepSize] = useMemo(generateLabelledSlider, []);
   const [SensitivitySlider, setSensitivity] = useMemo(
     generateLabelledSlider,
     [],
@@ -181,6 +181,14 @@ export default function Controls({
       renderParameters.current.bufferSize = 2 ** value;
       onRenderParametersUpdate({ bufferSize: 2 ** value });
       setBufferSize(`${2 ** value} = 2^${value.toString()} samples`);
+      setNumWindows(
+        getNumWindows(
+          renderParameters.current.bufferSize,
+          renderParameters.current.windowSize,
+          renderParameters.current.stepSize *
+            renderParameters.current.windowSize,
+        ),
+      );
     },
     [onRenderParametersUpdate, setBufferSize],
   );
@@ -197,24 +205,41 @@ export default function Controls({
       renderParameters.current.windowSize = windowSize;
       // step size needs to be recalculated when window size changes
       const windowStepSize =
-        windowSize * (1 - renderParameters.current.overlap);
+        windowSize * (1 - renderParameters.current.stepSize);
       onRenderParametersUpdate({ windowSize, windowStepSize });
       setWindowSize(`${windowSize.toString()} = 2^${value.toString()} samples`);
+
+      setNumWindows(
+        getNumWindows(
+          renderParameters.current.bufferSize,
+          renderParameters.current.windowSize,
+          renderParameters.current.stepSize *
+            renderParameters.current.windowSize,
+        ),
+      );
     },
     [onRenderParametersUpdate, setWindowSize],
   );
 
-  const onOverlapChange = useCallback(
+  const onStepSizeChange = useCallback(
     (value: number) => {
-      // step size needs to be recalculated when overlap changes
       const windowStepSize = Math.floor(
-        renderParameters.current.windowSize * (1 - value),
+        renderParameters.current.windowSize * value,
       );
-      renderParameters.current.overlap = value;
+      renderParameters.current.stepSize = value;
       onRenderParametersUpdate({ windowStepSize });
-      setOverlap(`${formatPercentage(value)} window size`);
+      setStepSize(`${formatPercentage(value)} window size`);
+
+      setNumWindows(
+        getNumWindows(
+          renderParameters.current.bufferSize,
+          renderParameters.current.windowSize,
+          renderParameters.current.stepSize *
+            renderParameters.current.windowSize,
+        ),
+      );
     },
-    [onRenderParametersUpdate, setOverlap],
+    [onRenderParametersUpdate, setStepSize],
   );
 
   const onSensitivityChange = useCallback(
@@ -295,7 +320,7 @@ export default function Controls({
   useEffect(() => {
     onBufferSizeChange(Math.log2(renderParameters.current.bufferSize));
     onWindowSizeChange(Math.log2(renderParameters.current.windowSize));
-    onOverlapChange(renderParameters.current.overlap);
+    onStepSizeChange(renderParameters.current.stepSize);
     onSensitivityChange(renderParameters.current.sensitivity);
     onContrastChange(renderParameters.current.contrast);
     onZoomChange(renderParameters.current.zoom);
@@ -347,6 +372,9 @@ export default function Controls({
         {playState === "loading-file" && <ButtonProgress size={24} />}
       </ButtonContainer>
       <Typography variant="subtitle1">Current file: {file?.name}</Typography>
+      <Typography variant="subtitle1">
+        Spectrogram speed: {numWindows} windows/render
+      </Typography>
       <Button
         fullWidth
         variant="outlined"
@@ -389,14 +417,14 @@ export default function Controls({
         defaultValue={Math.log2(renderParameters.current.windowSize)}
         onChange={onWindowSizeChange}
       />
-      <OverlapSlider
-        nameLabelId="overlap-slider-label"
-        nameLabel="Overlap"
+      <StepSizeSlider
+        nameLabelId="stepSize-slider-label"
+        nameLabel="StepSize"
         min={0}
         max={1}
         step={0.001}
-        defaultValue={renderParameters.current.overlap}
-        onChange={onOverlapChange}
+        defaultValue={renderParameters.current.stepSize}
+        onChange={onStepSizeChange}
       />
       <SensitivitySlider
         nameLabelId="sensitivity-slider-label"

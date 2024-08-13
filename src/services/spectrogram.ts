@@ -7,6 +7,7 @@ import {
   lerp,
   melToHz,
   nyquistFrequency,
+  getNumWindows,
 } from "./math-util";
 
 export type Scale = "linear" | "mel";
@@ -116,10 +117,8 @@ export function generateSpectrogram(
     scaleSize = windowSize / 2;
   }
 
-  let numWindows = Math.ceil((samplesLength - windowSize) / windowStepSize + 1);
-  if (numWindows < 0) {
-    numWindows = 0;
-  }
+  let numWindows = getNumWindows(samplesLength, windowSize, windowStepSize);
+
   let startIdx = samplesStart;
 
   if (isStart || isEnd) {

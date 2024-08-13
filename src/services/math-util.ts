@@ -59,3 +59,14 @@ export function nyquistFrequency(
 ): number {
   return ((windowSize - 2) * sampleRate) / (2 * windowSize); // (1/2 - 1/windowSize) * sampleRate
 }
+
+export function getNumWindows(
+  samplesLength: number,
+  windowSize: number,
+  windowStepSize: number,
+): number {
+  return Math.max(
+    0,
+    Math.ceil((samplesLength - windowSize) / windowStepSize + 1),
+  );
+}
