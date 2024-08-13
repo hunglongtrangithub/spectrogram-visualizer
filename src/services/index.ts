@@ -101,9 +101,6 @@ export class SpectrogramVisualizer {
       sampleRate: bufferData.sampleRate,
       isStart: bufferData.isStart,
     };
-    console.log(
-      `Spectrogram options: ${JSON.stringify(spectrogramOptions)}. Buffer length: ${bufferData.length}`,
-    );
     try {
       const spectrogram = await offThreadGenerateSpectrogram(
         bufferData.buffer,
@@ -113,6 +110,13 @@ export class SpectrogramVisualizer {
       );
       this.spectrogramBuffer.enqueue(spectrogram.spectrogramData);
       this.imageDirty = true;
+      console.log(`
+spectrogramOptions: ${JSON.stringify(spectrogramOptions)}
+spectrogram.spectrogramData height and width: ${this.spectrogramScaleSize} x ${spectrogram.windowCount}
+bufferData.length: ${bufferData.length}
+spectrogramBuffer.numRows: ${this.spectrogramBuffer.numRows}
+spectrogramBuffer.currentLength: ${this.spectrogramBuffer.currentLength}
+`);
 
       return spectrogram.input;
     } catch (e) {
