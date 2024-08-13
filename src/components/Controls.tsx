@@ -511,7 +511,6 @@ export default function Controls({
                 <CloseButton aria-label="close" onClick={closeSettings}>
                   <CloseIcon />
                 </CloseButton>
-                <Typography variant="subtitle1">Settings</Typography>
               </SettingsHeader>
               {content}
             </SettingsDrawerInner>
