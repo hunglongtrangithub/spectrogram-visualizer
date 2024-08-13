@@ -11,8 +11,6 @@ import MicIcon from "@mui/icons-material/Mic";
 import SettingsIcon from "@mui/icons-material/Settings";
 import StopIcon from "@mui/icons-material/Stop";
 import Drawer from "@mui/material/Drawer";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 import React, {
   useState,
@@ -186,7 +184,7 @@ export default function Controls({
           renderParameters.current.bufferSize,
           renderParameters.current.windowSize,
           renderParameters.current.stepSize *
-            renderParameters.current.windowSize,
+          renderParameters.current.windowSize,
         ),
       );
     },
@@ -196,12 +194,6 @@ export default function Controls({
   const onWindowSizeChange = useCallback(
     (value: number) => {
       const windowSize = 2 ** value;
-      if (windowSize > renderParameters.current.bufferSize) {
-        toast.error(
-          "Window size cannot be greater than buffer size. Stop the audio and increase buffer size first.",
-        );
-        return;
-      }
       renderParameters.current.windowSize = windowSize;
       // step size needs to be recalculated when window size changes
       const windowStepSize =
@@ -214,7 +206,7 @@ export default function Controls({
           renderParameters.current.bufferSize,
           renderParameters.current.windowSize,
           renderParameters.current.stepSize *
-            renderParameters.current.windowSize,
+          renderParameters.current.windowSize,
         ),
       );
     },
@@ -235,7 +227,7 @@ export default function Controls({
           renderParameters.current.bufferSize,
           renderParameters.current.windowSize,
           renderParameters.current.stepSize *
-            renderParameters.current.windowSize,
+          renderParameters.current.windowSize,
         ),
       );
     },
@@ -422,10 +414,10 @@ export default function Controls({
       />
       <StepSizeSlider
         nameLabelId="stepSize-slider-label"
-        nameLabel="StepSize"
-        min={0}
+        nameLabel="Window step size"
+        min={0.01}
         max={1}
-        step={0.001}
+        step={0.01}
         defaultValue={renderParameters.current.stepSize}
         onChange={onStepSizeChange}
       />
