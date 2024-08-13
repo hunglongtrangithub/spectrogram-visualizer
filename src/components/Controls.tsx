@@ -371,10 +371,6 @@ export default function Controls({
         </Button>
         {playState === "loading-file" && <ButtonProgress size={24} />}
       </ButtonContainer>
-      <Typography variant="subtitle1">Current file: {file?.name}</Typography>
-      <Typography variant="subtitle1">
-        Spectrogram speed: {numWindows} windows/render
-      </Typography>
       <Button
         fullWidth
         variant="outlined"
@@ -396,6 +392,13 @@ export default function Controls({
         Stop
       </LastButton>
 
+      <StyledDivider />
+      <Typography variant="caption" paragraph>
+        Current file: {file?.name ?? "None"}
+      </Typography>
+      <Typography variant="caption" paragraph>
+        Spectrogram speed: {numWindows} windows/render
+      </Typography>
       <StyledDivider />
 
       <BufferSizeSlider
