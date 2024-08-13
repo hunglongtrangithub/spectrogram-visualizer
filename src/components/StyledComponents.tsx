@@ -57,6 +57,8 @@ export const DrawerInner = styled(Paper)(({ theme }) => ({
   borderTopLeftRadius: theme.spacing(2),
   borderTopRightRadius: theme.spacing(2),
   maxWidth: "300px",
+  height: "100%",
+  overflow: "auto",
   padding: theme.spacing(2),
   boxSizing: "border-box",
   margin: `${theme.spacing(2)}px auto 0 auto`,

@@ -89,8 +89,7 @@ body {
   padding: 16px;
   width: 300px;
   flex: 0 0 auto;
-  overflow-x: auto;
-  overflow-y: auto;
+  overflow: auto;
   max-height: 100%;
 }
 
