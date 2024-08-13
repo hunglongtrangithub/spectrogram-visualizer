@@ -31,8 +31,7 @@ import {
   CloseButton,
   SettingsHeader,
   SettingsButton,
-  SettingsDrawer,
-  SettingsDrawerInner,
+  DrawerInner,
 } from "./StyledComponents";
 import generateLabelledSlider from "./LabelSlider";
 
@@ -41,6 +40,7 @@ import { hzToMel, melToHz } from "../services/math-util";
 import { Scale } from "../services/spectrogram";
 import { ManagerParameters } from "../services";
 import { PlayState } from "../App";
+import { Drawer, SwipeableDrawer } from "@mui/material";
 
 const formatHz = (hz: number) => {
   if (hz < 999.5) {
@@ -96,11 +96,6 @@ export default function Controls({
   const closeSettings = useCallback(
     () => setSettingsOpen(false),
     [setSettingsOpen],
-  );
-
-  const onInnerPaperClick = useCallback(
-    (e: MouseEvent) => e.stopPropagation(),
-    [],
   );
 
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -502,21 +497,16 @@ export default function Controls({
           >
             Settings
           </SettingsButton>
-          <SettingsDrawer
-            anchor="bottom"
-            open={settingsOpen}
-            onClose={closeSettings}
-            PaperProps={{ elevation: 0, onClick: closeSettings }}
-          >
-            <SettingsDrawerInner elevation={16} onClick={onInnerPaperClick}>
+          <Drawer anchor="right" open={settingsOpen} onClose={closeSettings}>
+            <DrawerInner>
               <SettingsHeader>
                 <CloseButton aria-label="close" onClick={closeSettings}>
                   <CloseIcon />
                 </CloseButton>
               </SettingsHeader>
               {content}
-            </SettingsDrawerInner>
-          </SettingsDrawer>
+            </DrawerInner>
+          </Drawer>
         </>
       ) : (
         content

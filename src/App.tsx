@@ -18,7 +18,6 @@ const controlsTheme = createTheme({
     mode: "dark",
     background: {
       default: "#101010",
-      paper: "#222222",
     },
     primary: {
       main: "#ffffff",

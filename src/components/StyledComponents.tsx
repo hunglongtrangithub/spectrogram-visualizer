@@ -37,9 +37,7 @@ export const LastButton = styled(Button)(({ theme }) => ({
 }));
 
 export const CloseButton = styled(IconButton)(({ theme }) => ({
-  marginTop: -theme.spacing(1.5),
-  marginLeft: -theme.spacing(1.5),
-  width: theme.spacing(6),
+  marginBottom: theme.spacing(1.5),
 }));
 
 export const SettingsHeader = styled(Box)({
@@ -55,11 +53,7 @@ export const SettingsButton = styled(Button)(({ theme }) => ({
   padding: `${theme.spacing(1.5)}px ${theme.spacing(3)}px`,
 }));
 
-export const SettingsDrawer = styled(Drawer)({
-  backgroundColor: "transparent",
-});
-
-export const SettingsDrawerInner = styled(Paper)(({ theme }) => ({
+export const DrawerInner = styled(Paper)(({ theme }) => ({
   borderTopLeftRadius: theme.spacing(2),
   borderTopRightRadius: theme.spacing(2),
   maxWidth: "300px",
