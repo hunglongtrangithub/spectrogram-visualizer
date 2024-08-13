@@ -453,6 +453,7 @@ export default function Controls({
         <Select
           labelId="scale-select-label"
           id="scale-select"
+          label="Frequency scale"
           defaultValue={renderParameters.current.scale}
           onChange={onScaleChange}
         >
@@ -465,6 +466,7 @@ export default function Controls({
         <Select
           labelId="gradient-select-label"
           id="gradient-select"
+          label="Colour"
           defaultValue={renderParameters.current.gradient}
           onChange={onGradientChange}
         >
