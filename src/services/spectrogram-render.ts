@@ -33,7 +33,7 @@ export class Circular2DDataBuffer<T extends TypedArray> {
 
   constructor(
     // Either the TypedArray constructor or an existing TypedArray instance
-    TypedArrayConstructorOrData: T | { new (length: number): T },
+    TypedArrayConstructorOrData: T | { new(length: number): T },
     // Number of columns in the buffer
     numColumns: number,
     // Number of rows in the buffer
@@ -148,6 +148,73 @@ export class Circular2DDataBuffer<T extends TypedArray> {
     this.bufferData = emptyBufferData;
     this.startIndex = 0;
     this.currentLength = 0;
+  }
+
+  // Display function to render the buffer in 2D
+  display(threshold: number = 3): void {
+    console.log("Buffer Data:");
+
+    const totalRows = this.numRows;
+    const showStartRows = Math.min(threshold, totalRows);
+    const showEndRows = Math.min(threshold, totalRows - showStartRows);
+
+    // Display the first few rows
+    for (let i = 0; i < showStartRows; i++) {
+      this.printRow(i, threshold);
+    }
+
+    // Ellipsis if there are hidden rows in the middle
+    if (totalRows > 2 * threshold) {
+      console.log("...");
+    }
+
+    // Display the last few rows
+    for (let i = 0; i < showEndRows; i++) {
+      this.printRow(totalRows - showEndRows + i, threshold);
+    }
+  }
+
+  // Helper function to print a single row
+  private printRow(rowIdx: number, threshold: number): void {
+    let row = "";
+
+    const totalColumns = this.numColumns;
+    const showStartColumns = Math.min(threshold, totalColumns);
+    const showEndColumns = Math.min(threshold, totalColumns - showStartColumns);
+
+    // Display first few columns
+    for (let j = 0; j < showStartColumns; j++) {
+      const index =
+        mod(this.startIndex + j, totalColumns) * this.numRows + rowIdx;
+      row += this.formatValue(this.bufferData[index]) + "\t";
+    }
+
+    // Ellipsis if there are hidden columns in the middle
+    if (totalColumns > 2 * threshold) {
+      row += "...\t";
+    }
+
+    // Display last few columns
+    for (let j = 0; j < showEndColumns; j++) {
+      const index =
+        mod(this.startIndex + totalColumns - showEndColumns + j, totalColumns) *
+        this.numRows +
+        rowIdx;
+      row += this.formatValue(this.bufferData[index]) + "\t";
+    }
+
+    console.log(row.trim());
+  }
+
+  // Helper function to format values based on the TypedArray type
+  private formatValue(value: number): string {
+    if (
+      this.bufferData instanceof Float32Array ||
+      this.bufferData instanceof Float64Array
+    ) {
+      return value.toFixed(4); // Formatting for floating-point numbers
+    }
+    return value.toString(); // Default formatting for other types
   }
 }
 
