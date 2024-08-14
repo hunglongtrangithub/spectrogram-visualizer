@@ -31,8 +31,6 @@ let globalAudioCtx: AudioContext | null = null;
 function App() {
   const leftSpectrogramRef = useRef<HTMLCanvasElement | null>(null);
   const rightSpectrogramRef = useRef<HTMLCanvasElement | null>(null);
-  const spectrogramWindowSize = 4096;
-  const spectrogramwindowStepSize = 1024;
 
   const [spectrogramManager, setSpectrogramManager] =
     useState<SpectrogramManager | null>(null);
@@ -41,18 +39,17 @@ function App() {
     if (leftSpectrogramRef.current && rightSpectrogramRef.current) {
       console.log("Initializing spectrogram manager...");
       try {
-        const manager = new SpectrogramManager(
-          [leftSpectrogramRef.current, rightSpectrogramRef.current],
-          spectrogramWindowSize,
-          spectrogramwindowStepSize,
-        );
+        const manager = new SpectrogramManager([
+          leftSpectrogramRef.current,
+          rightSpectrogramRef.current,
+        ]);
         setSpectrogramManager(manager);
       } catch (e) {
         console.error(e);
         toast.error(`Failed to initialize spectrogram manager: ${e}`);
       }
     }
-  }, [spectrogramWindowSize, spectrogramwindowStepSize]);
+  }, []);
 
   const onRenderFromMicrophone = useCallback(() => {
     if (!spectrogramManager) {

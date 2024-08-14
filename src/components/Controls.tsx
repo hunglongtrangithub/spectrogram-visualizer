@@ -33,8 +33,9 @@ import {
 } from "./StyledComponents";
 import generateLabelledSlider from "./LabelSlider";
 
-import { GRADIENTS } from "../services/color-util";
-import { hzToMel, melToHz, getNumWindows } from "../services/math-util";
+import { WindowFunctionName } from "../services/utils/fft-windowing";
+import { GRADIENTS } from "../services/utils/color-util";
+import { hzToMel, melToHz, getNumWindows } from "../services/utils/math-util";
 import { Scale } from "../services/spectrogram";
 import { ManagerParameters } from "../services";
 import { PlayState } from "../App";
@@ -62,6 +63,7 @@ const defaultParameters = {
   zoom: 1,
   minFrequency: 10,
   maxFrequency: 12000,
+  windowFunction: "hann" as WindowFunctionName,
   scale: "mel" as Scale,
   gradient: "Heated Metal",
 };
@@ -283,6 +285,16 @@ export default function Controls({
     [onRenderParametersUpdate, setMaxFrequency],
   );
 
+  const onWindowFunctionChange = useCallback(
+    (event: SelectChangeEvent) => {
+      if (typeof event.target.value === "string") {
+        renderParameters.current.windowFunction = event.target.value as WindowFunctionName;
+        onRenderParametersUpdate({ windowFunction: event.target.value as WindowFunctionName });
+      }
+    },
+    [onRenderParametersUpdate],
+  );
+
   const onScaleChange = useCallback(
     (event: SelectChangeEvent) => {
       if (typeof event.target.value === "string") {
@@ -319,7 +331,7 @@ export default function Controls({
     onMinFreqChange(hzToMel(renderParameters.current.minFrequency));
     onMaxFreqChange(hzToMel(renderParameters.current.maxFrequency));
     onRenderParametersUpdate({ scale: renderParameters.current.scale });
-
+    onRenderParametersUpdate({ windowFunction: renderParameters.current.windowFunction });
     const gradientData = GRADIENTS.find(
       (g) => g.name === renderParameters.current.gradient,
     );
@@ -415,9 +427,9 @@ export default function Controls({
       <StepSizeSlider
         nameLabelId="stepSize-slider-label"
         nameLabel="Window step size"
-        min={0.01}
+        min={0.05}
         max={1}
-        step={0.01}
+        step={0.05}
         defaultValue={renderParameters.current.stepSize}
         onChange={onStepSizeChange}
       />
@@ -466,6 +478,21 @@ export default function Controls({
         defaultValue={hzToMel(renderParameters.current.maxFrequency)}
         onChange={onMaxFreqChange}
       />
+      <StyledSelect>
+        <InputLabel id="window-select-label">Window function</InputLabel>
+        <Select
+          labelId="window-select-label"
+          id="window-select"
+          label="Window function"
+          defaultValue="hann"
+          onChange={onWindowFunctionChange}
+        >
+          <MenuItem value="hann">Hann</MenuItem>
+          <MenuItem value="hamming">Hamming</MenuItem>
+          <MenuItem value="blackman">Blackman</MenuItem>
+          <MenuItem value="blackman_harris">Blackman-Harris</MenuItem>
+        </Select>
+      </StyledSelect>
       <StyledSelect>
         <InputLabel id="scale-select-label">Frequency scale</InputLabel>
         <Select

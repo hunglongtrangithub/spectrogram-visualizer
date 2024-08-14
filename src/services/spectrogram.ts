@@ -1,14 +1,15 @@
 import { FFT } from "jsfft";
 
 import {
-  blackmanHarris,
   hzToMel,
   inverseLerp,
   lerp,
   melToHz,
   nyquistFrequency,
   getNumWindows,
-} from "./math-util";
+} from "./utils/math-util";
+
+import { WindowFunctionName, window } from "./utils/fft-windowing";
 
 export type Scale = "linear" | "mel";
 export const SPECTROGRAM_WINDOW_SIZE = 4096;
@@ -24,6 +25,7 @@ export interface SpectrogramOptions {
   sampleRate: number;
   scale?: Scale;
   scaleSize?: number;
+  windowFunction?: WindowFunctionName;
 }
 
 export interface SpectrogramResult {
@@ -32,8 +34,21 @@ export interface SpectrogramResult {
   spectrogramData: Float32Array;
 }
 
-// Helper function to calculate the spectrogram for a single frame
-// When minFrequencyHz > maxFrequencyHz, the resultBuffer will be filled in the reverse order: larger index -> lower frequency
+/**
+ * Helper function to calculate the spectrogram for a single frame.
+ *
+ * @param {Float32Array} windowSamples - The audio samples for the current frame.
+ * @param {Float32Array} resultBuffer - The buffer to store the spectrogram result.
+ * @param {number} resultBufferIndex - The start index in the result buffer.
+ * @param {number} minFrequencyHz - The minimum frequency to calculate the spectrogram for.
+ * @param {number} maxFrequencyHz - The maximum frequency to calculate the spectrogram for.
+ * @param {number} sampleRate - The sample rate of the audio.
+ * @param {Scale} scale - The scale to use for the spectrogram.
+ * @param {number} scaleSize - The size of the scale.
+ * @param {WindowFunctionName} windowFunction - The windowing function to apply to the samples.
+ *
+ * When minFrequencyHz > maxFrequencyHz, the resultBuffer will be filled in the reverse order: larger index -> lower frequency.
+ */
 function generateSpectrogramForSingleFrame(
   windowSamples: Float32Array,
   resultBuffer: Float32Array,
@@ -43,11 +58,10 @@ function generateSpectrogramForSingleFrame(
   sampleRate: number,
   scale: Scale,
   scaleSize: number,
+  windowFunction: WindowFunctionName,
 ) {
-  // Apply a Blackman-Harris windowing function to the input
-  for (let i = 0; i < windowSamples.length; i += 1) {
-    windowSamples[i] *= blackmanHarris(i, windowSamples.length);
-  }
+  // Apply a windowing function to the input
+  windowSamples = window(windowFunction, windowSamples);
 
   const fft = FFT(windowSamples);
   for (let j = 0; j < scaleSize; j += 1) {
@@ -86,25 +100,45 @@ function generateSpectrogramForSingleFrame(
   }
 }
 
-// Generate spectrogram for the given audio samples at the given start index and length
-// NOTE: when isStart or isEnd are false:
-// if samplesLength <= windowSize - windowStepSize, numWindows <= 0
-// if windowSize - windowStepSize < samplesLength <= windowSize, numWindows = 1
-// Make sure that samplesLength is larger than windowSize - windowStepSize, otherwise the function won't render any window
+/**
+ * Generate spectrogram for the given audio samples at the given start index and length.
+ *
+ * @param {Float32Array} samples - The whole audio samples.
+ * @param {number} samplesStart - The start index in the audio samples to calculate the spectrogram for.
+ * @param {number} samplesLength - The length of the audio samples to calculate the spectrogram for.
+ * @param {Object} options - The options for generating the spectrogram.
+ * @param {boolean} [options.isStart=false] - Is the frame at the start of the audio.
+ * @param {boolean} [options.isEnd=false] - Is the frame at the end of the audio.
+ * @param {number} [options.windowSize=SPECTROGRAM_WINDOW_SIZE] - Size of the FFT window in samples.
+ * @param {number} [options.windowStepSize=SPECTROGRAM_WINDOW_STEPSIZE] - Number of samples between each FFT window.
+ * @param {number} options.minFrequencyHz - Smallest frequency in Hz to calculate the spectrogram for.
+ * @param {number} options.maxFrequencyHz - Largest frequency in Hz to calculate the spectrogram for.
+ * @param {number} options.sampleRate - Sample rate of the audio.
+ * @param {string} [options.scale="linear"] - Scale of the returned spectrogram (can be 'linear' or 'mel').
+ * @param {number} options.scaleSize - Number of rows in the returned spectrogram.
+ * @param {string} [options.windowFunction="hann"] - The windowing function to apply to the samples before calculating the FFT.
+ * @returns {SpectrogramResult} The result of the spectrogram generation.
+ *
+ * When isStart or isEnd are false:
+ * - if samplesLength <= windowSize - windowStepSize, numWindows <= 0
+ * - if windowSize - windowStepSize < samplesLength <= windowSize, numWindows = 1
+ * - Make sure that samplesLength is larger than windowSize - windowStepSize, otherwise the function won't render any window.
+ */
 export function generateSpectrogram(
-  samples: Float32Array, // The whole audio samples
-  samplesStart: number, // The start index in the audio samples to calculate the spectrogram for
-  samplesLength: number, // The length of the audio samples to calculate the spectrogram for
+  samples: Float32Array,
+  samplesStart: number,
+  samplesLength: number,
   {
-    isStart = false, // Is the frame at the start of the audio
-    isEnd = false, // Is the frame at the end of the audio
-    windowSize = SPECTROGRAM_WINDOW_SIZE, // Size of the FFT window in samples
-    windowStepSize = SPECTROGRAM_WINDOW_STEPSIZE, // Number of samples between each FFT window
-    minFrequencyHz, // Smallest frequency in Hz to calculate the spectrogram for
-    maxFrequencyHz, // Largest frequency in Hz to calculate the spectrogram for
-    sampleRate, // Sample rate of the audio
-    scale = "linear", // Scale of the returned spectrogram (can be 'linear' or 'mel')
-    scaleSize, // Number of rows in the returned spectrogram
+    isStart = false,
+    isEnd = false,
+    windowSize = SPECTROGRAM_WINDOW_SIZE,
+    windowStepSize = SPECTROGRAM_WINDOW_STEPSIZE,
+    minFrequencyHz,
+    maxFrequencyHz,
+    sampleRate,
+    scale = "linear",
+    scaleSize,
+    windowFunction = "hann",
   }: SpectrogramOptions,
 ): SpectrogramResult {
   if (minFrequencyHz === undefined) {
@@ -171,6 +205,7 @@ export function generateSpectrogram(
       sampleRate,
       scale,
       scaleSize,
+      windowFunction,
     );
   }
 
@@ -186,6 +221,7 @@ export function generateSpectrogram(
       sampleRate,
       scale,
       scaleSize,
+      windowFunction,
     },
     spectrogramData: result,
   };

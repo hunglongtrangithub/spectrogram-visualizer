@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 
 import { Circular2DDataBuffer } from "./spectrogram-render";
 import { SpectrogramGPURenderer, RenderParameters } from "./spectrogram-render";
-import { offThreadGenerateSpectrogram } from "./worker-util";
+import { offThreadGenerateSpectrogram } from "./worker-manager";
 import {
   CHANNEL_BUFFER_PROCESSOR,
   ProcessBuffersMessage,
@@ -13,6 +13,7 @@ import {
   SPECTROGRAM_WINDOW_SIZE,
   SPECTROGRAM_WINDOW_STEPSIZE,
 } from "./spectrogram";
+import { WindowFunctionName } from "./utils/fft-windowing";
 
 interface SpectrogramBufferData {
   buffer: Float32Array;
@@ -24,6 +25,7 @@ interface SpectrogramBufferData {
 
 export interface VisualizerParameters extends RenderParameters {
   windowStepSize: number;
+  windowFunction: WindowFunctionName;
 }
 
 export interface ManagerParameters extends VisualizerParameters {
@@ -37,12 +39,14 @@ export class SpectrogramVisualizer {
   private readonly spectrogramScaleSize: number;
   private spectrogramWindowSize: number;
   private spectrogramWindowStepSize: number;
+  private windowFunction: WindowFunctionName;
   private imageDirty: boolean = false;
 
   constructor(
     canvas: HTMLCanvasElement,
-    spectrogramWindowSize: number = SPECTROGRAM_WINDOW_SIZE,
-    spectrogramWindowStepSize: number = SPECTROGRAM_WINDOW_STEPSIZE,
+    spectrogramWindowSize: number,
+    spectrogramWindowStepSize: number,
+    windowFunction: WindowFunctionName,
     spectrogramScaleSize: number,
   ) {
     this.canvas = canvas;
@@ -51,8 +55,8 @@ export class SpectrogramVisualizer {
     }
     this.spectrogramWindowSize = spectrogramWindowSize;
     this.spectrogramWindowStepSize = spectrogramWindowStepSize;
-    this.spectrogramScaleSize =
-      spectrogramScaleSize || spectrogramWindowSize / 2;
+    this.windowFunction = windowFunction;
+    this.spectrogramScaleSize = spectrogramScaleSize;
 
     this.spectrogramBuffer = new Circular2DDataBuffer(
       Float32Array,
@@ -100,6 +104,7 @@ export class SpectrogramVisualizer {
       scaleSize: this.spectrogramScaleSize,
       sampleRate: bufferData.sampleRate,
       isStart: bufferData.isStart,
+      windowFunction: this.windowFunction,
     };
     try {
       const spectrogram = await offThreadGenerateSpectrogram(
@@ -135,9 +140,10 @@ spectrogram.windowCount: ${spectrogram.windowCount}
   public updateRenderParameters(
     parameters: Partial<VisualizerParameters>,
   ): void {
-    const { windowStepSize, ...renderParameters } = parameters;
+    const { windowStepSize, windowFunction, ...renderParameters } = parameters;
     this.spectrogramWindowStepSize =
       windowStepSize || this.spectrogramWindowStepSize;
+    this.windowFunction = windowFunction || this.windowFunction;
     this.spectrogramWindowSize =
       renderParameters.windowSize || this.spectrogramWindowSize;
     this.renderer.updateParameters(renderParameters);
@@ -174,6 +180,7 @@ export default class SpectrogramManager {
     canvases: (HTMLCanvasElement | null)[],
     spectrogramWindowSize: number = SPECTROGRAM_WINDOW_SIZE,
     spectrogramWindowStepSize: number = SPECTROGRAM_WINDOW_STEPSIZE,
+    windowFunction: WindowFunctionName = "hann",
     spectrogramScaleSize?: number,
     managerBufferSize?: number,
   ) {
@@ -183,6 +190,7 @@ export default class SpectrogramManager {
       canvases,
       spectrogramWindowSize,
       spectrogramWindowStepSize,
+      windowFunction,
       spectrogramScaleSize || spectrogramWindowSize / 2,
     );
     console.log(`Number of visualizers: ${this.numberOfChannels}`);
@@ -192,6 +200,7 @@ export default class SpectrogramManager {
     canvases: (HTMLCanvasElement | null)[],
     windowSize: number,
     windowStepSize: number,
+    windowFunction: WindowFunctionName,
     scaleSize: number,
   ): void {
     canvases.forEach((canvas) => {
@@ -202,6 +211,7 @@ export default class SpectrogramManager {
               canvas,
               windowSize,
               windowStepSize,
+              windowFunction,
               scaleSize,
             ),
           );

@@ -1,16 +1,16 @@
-import { colorRamp, Gradient, HEATED_METAL_GRADIENT } from "./color-util";
+import { TypedArray } from "jsfft";
+import { colorRamp, Gradient, HEATED_METAL_GRADIENT } from "./utils/color-util";
 import {
-  TypedArray,
   lerp,
   mod,
   hzToMel,
   melToHz,
   nyquistFrequency,
-} from "./math-util";
+} from "./utils/math-util";
 import FragmentShaderSrc from "./shaders/fragment.glsl";
 import VertexShaderSrc from "./shaders/vertex.glsl";
 import { Scale } from "./spectrogram";
-import { GlslMinify } from "./glsl-loader";
+import { GlslMinify } from "./utils/glsl-loader";
 
 export class Circular2DDataBuffer<T extends TypedArray> {
   // Number of columns in the buffer

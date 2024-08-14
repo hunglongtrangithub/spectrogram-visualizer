@@ -16,4 +16,3 @@ Real-time audio spectrogram visualizer using Web Audio API and Canvas API. This 
 
 ## TODO
 
-Make the window size and hop size adjustable from the UI
