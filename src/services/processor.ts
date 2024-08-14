@@ -3,7 +3,7 @@ import {
   ProcessBuffersMessage,
 } from "./processor-constants";
 import { SPECTROGRAM_WINDOW_SIZE } from "./spectrogram";
-import CircularDataBuffer from "./buffers";
+import CircularDataBuffer from "./processor-buffers";
 
 class ChannelBufferProcessor extends AudioWorkletProcessor {
   private channelBuffers: CircularDataBuffer[] = [];
