@@ -3,7 +3,7 @@ import { describe, test, expect, beforeAll } from "bun:test";
 import { promises as fs } from "fs";
 import { join } from "path";
 
-import { GlslMinify } from "../src/services/glsl-loader";
+import { GlslMinify } from "../src/services/utils/glsl-loader";
 
 const vertexShaderPath = join(__dirname, "../src/services/shaders/vertex.glsl");
 const fragmentShaderPath = join(
