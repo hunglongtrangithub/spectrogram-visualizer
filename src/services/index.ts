@@ -8,7 +8,7 @@ import {
   CHANNEL_BUFFER_PROCESSOR,
   ProcessBuffersMessage,
 } from "./processor-constants";
-import processorUrl from "./processor.ts?url";
+import processorUrl from "./processor.ts?worker&url";
 import {
   SPECTROGRAM_WINDOW_SIZE,
   SPECTROGRAM_WINDOW_STEPSIZE,
@@ -115,14 +115,14 @@ export class SpectrogramVisualizer {
       );
       this.spectrogramBuffer.enqueue(spectrogram.spectrogramData);
       this.imageDirty = true;
-      console.log(`
-spectrogramOptions: ${JSON.stringify(spectrogramOptions)}
-spectrogram.spectrogramData height and width: ${this.spectrogramScaleSize} x ${spectrogram.windowCount}
-bufferData.length: ${bufferData.length}
-spectrogramBuffer.numRows: ${this.spectrogramBuffer.numRows}
-spectrogramBuffer.currentLength: ${this.spectrogramBuffer.currentLength}
-spectrogram.windowCount: ${spectrogram.windowCount}
-`);
+      //       console.log(`
+      // spectrogramOptions: ${JSON.stringify(spectrogramOptions)}
+      // spectrogram.spectrogramData height and width: ${this.spectrogramScaleSize} x ${spectrogram.windowCount}
+      // bufferData.length: ${bufferData.length}
+      // spectrogramBuffer.numRows: ${this.spectrogramBuffer.numRows}
+      // spectrogramBuffer.currentLength: ${this.spectrogramBuffer.currentLength}
+      // spectrogram.windowCount: ${spectrogram.windowCount}
+      // `);
 
       return spectrogram.input;
     } catch (e) {
@@ -360,7 +360,14 @@ export default class SpectrogramManager {
     );
 
     // Create an AudioWorkletNode to process the audio
-    await audioCtx.audioWorklet.addModule(processorUrl);
+    await audioCtx.audioWorklet
+      .addModule(processorUrl)
+      .then(() => {
+        console.log("Processor module loaded");
+      })
+      .catch((err) => {
+        console.error("Error loading AudioWorklet module:", err);
+      });
     const processorNode = new AudioWorkletNode(
       audioCtx,
       CHANNEL_BUFFER_PROCESSOR,
@@ -371,7 +378,7 @@ export default class SpectrogramManager {
         },
       },
     );
-
+    console.log("Processor node created");
     // Set up the message handler to update the spectrogram
     processorNode.port.onmessage = async (
       event: MessageEvent<Required<ProcessBuffersMessage>>,
@@ -399,7 +406,7 @@ export default class SpectrogramManager {
     // Establish the audio graph
     source.connect(processorNode);
     processorNode.connect(audioCtx.destination);
-
+    console.log("Microphone connected to processor node");
     // Return a function to stop rendering
     this.stopCallback = () => {
       processorNode.port.postMessage("stop");

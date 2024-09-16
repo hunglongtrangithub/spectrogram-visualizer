@@ -6,7 +6,7 @@ import glsl from "vite-plugin-glsl";
 export default defineConfig(({ mode }) => {
   return {
     build: {
-      target: "esnext"
+      target: "esnext",
     },
     plugins: [react(), glsl()],
     server: {

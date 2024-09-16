@@ -186,7 +186,7 @@ export default function Controls({
           renderParameters.current.bufferSize,
           renderParameters.current.windowSize,
           renderParameters.current.stepSize *
-          renderParameters.current.windowSize,
+            renderParameters.current.windowSize,
         ),
       );
     },
@@ -208,7 +208,7 @@ export default function Controls({
           renderParameters.current.bufferSize,
           renderParameters.current.windowSize,
           renderParameters.current.stepSize *
-          renderParameters.current.windowSize,
+            renderParameters.current.windowSize,
         ),
       );
     },
@@ -229,7 +229,7 @@ export default function Controls({
           renderParameters.current.bufferSize,
           renderParameters.current.windowSize,
           renderParameters.current.stepSize *
-          renderParameters.current.windowSize,
+            renderParameters.current.windowSize,
         ),
       );
     },
@@ -288,8 +288,11 @@ export default function Controls({
   const onWindowFunctionChange = useCallback(
     (event: SelectChangeEvent) => {
       if (typeof event.target.value === "string") {
-        renderParameters.current.windowFunction = event.target.value as WindowFunctionName;
-        onRenderParametersUpdate({ windowFunction: event.target.value as WindowFunctionName });
+        renderParameters.current.windowFunction = event.target
+          .value as WindowFunctionName;
+        onRenderParametersUpdate({
+          windowFunction: event.target.value as WindowFunctionName,
+        });
       }
     },
     [onRenderParametersUpdate],
@@ -331,7 +334,9 @@ export default function Controls({
     onMinFreqChange(hzToMel(renderParameters.current.minFrequency));
     onMaxFreqChange(hzToMel(renderParameters.current.maxFrequency));
     onRenderParametersUpdate({ scale: renderParameters.current.scale });
-    onRenderParametersUpdate({ windowFunction: renderParameters.current.windowFunction });
+    onRenderParametersUpdate({
+      windowFunction: renderParameters.current.windowFunction,
+    });
     const gradientData = GRADIENTS.find(
       (g) => g.name === renderParameters.current.gradient,
     );
