@@ -15,3 +15,10 @@ Real-time audio spectrogram visualizer using Web Audio API and Canvas API. This 
 3. Run `bun run dev` to start the development server
 
 ## TODO
+
+- [ ] Volume slider
+- [ ] Pause/continue button
+- [ ] Add keybindings
+- [ ] Allow zoom-out
+- [ ] Reset default settings
+- [ ] Allow spectrogram scrolling back and forth
