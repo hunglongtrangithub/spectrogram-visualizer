@@ -11,6 +11,7 @@ import MicIcon from "@mui/icons-material/Mic";
 import SettingsIcon from "@mui/icons-material/Settings";
 import StopIcon from "@mui/icons-material/Stop";
 import Drawer from "@mui/material/Drawer";
+import { FaGithub } from "react-icons/fa";
 
 import React, {
   useState,
@@ -39,6 +40,8 @@ import { hzToMel, melToHz, getNumWindows } from "../services/utils/math-util";
 import { Scale } from "../services/spectrogram";
 import { ManagerParameters } from "../services";
 import { PlayState } from "../App";
+import Box from "@mui/material/Box";
+import Link from "@mui/material/Link";
 
 const formatHz = (hz: number) => {
   if (hz < 999.5) {
@@ -186,7 +189,7 @@ export default function Controls({
           renderParameters.current.bufferSize,
           renderParameters.current.windowSize,
           renderParameters.current.stepSize *
-            renderParameters.current.windowSize,
+          renderParameters.current.windowSize,
         ),
       );
     },
@@ -208,7 +211,7 @@ export default function Controls({
           renderParameters.current.bufferSize,
           renderParameters.current.windowSize,
           renderParameters.current.stepSize *
-            renderParameters.current.windowSize,
+          renderParameters.current.windowSize,
         ),
       );
     },
@@ -229,7 +232,7 @@ export default function Controls({
           renderParameters.current.bufferSize,
           renderParameters.current.windowSize,
           renderParameters.current.stepSize *
-            renderParameters.current.windowSize,
+          renderParameters.current.windowSize,
         ),
       );
     },
@@ -536,6 +539,21 @@ export default function Controls({
       >
         Clear spectrogram
       </Button>
+      <Box component="footer" display="flex" justifyContent="center" py={4} position="relative">
+        <Link
+          href="https://github.com/hunglongtrangithub/spectrogram-visualizer"
+          target="_blank"
+          rel="noopener noreferrer"
+          underline="none"
+          color="inherit"
+          display="flex"
+          alignItems="center"
+          gap={1}
+        >
+          <FaGithub size={20} />
+          <span>View Source</span>
+        </Link>
+      </Box>
     </>
   );
   return (
