@@ -24,12 +24,23 @@ const castSliderValue = (value: number | number[]) => {
   return value[0];
 };
 
+/**
+ * This custom slider implementation manages its own internal span element and value label.
+ * - An internal `span` and `lastValueLabel` are maintained for fast, direct DOM updates.
+ * - A hook (`onSpanChange`) keeps the span reference in sync with React, ensuring the label is always up-to-date.
+ * - The custom `LabelledSlider` component uses `valueLabelRef` to connect the Typography label to the internal span.
+ * - The `onChange` handler from MUI's `Slider` calls the user-provided `onChange` callback, so external logic can react to value changes.
+ * - A `setValueLabel` function is exposed, allowing external code to update the label instantly by mutating the DOM and updating the internal value.
+ *
+ * This approach avoids React re-renders for label updates, ensuring smooth performance even during rapid slider movements.
+ */
 // This is an ugly hack to be able to update the value label very quickly. Having a prop for the
 // label and updating it as the slider is dragged causes severe stuttering of the spectrogram due to
 // React taking CPU time re-rendering components.
 function generateLabelledSlider(): [LabelledSlider, (value: string) => void] {
   let lastValueLabel: string = "";
   let span: HTMLSpanElement | null = null;
+  // Function to update the span element. Mutates span and lastValueLabel.
   const onSpanChange = (newSpan: HTMLSpanElement | null) => {
     if (newSpan !== null && newSpan !== span) {
       // Empty the node
